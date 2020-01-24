@@ -13,3 +13,6 @@ Make a session that is able to be joined by multiple people, up to 3 for right n
 Maze. 
 Be able to actually make the maze and have interactivity 
 Features: timer
+
+
+Could expand this to the point of algorithims where a computer block out paths at random(or by algorithim) or kill a player 

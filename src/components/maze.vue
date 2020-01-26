@@ -9,8 +9,13 @@
         v-for="col in maze.mazeMap[0].length"
         :key="col"
       >
-        <!-- Todo: insert player into start postion  -->
-        <box :player="playerData" />
+        <!-- Todo: insert player into start postion, load other players into this position   -->
+        <box
+          :endPoint="maze.endPosition"
+          :startPoint="maze.startPosition"
+          :mazeData="maze.mazeMap"
+          :player="playerData"
+        />
       </div>
     </div>
   </div>
@@ -34,7 +39,7 @@ export default Vue.extend({
       dataReady: false
     };
   },
-  created() {
+  mounted() {
     this.dataReady = true;
   },
   methods: {

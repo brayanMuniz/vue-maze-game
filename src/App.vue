@@ -36,7 +36,7 @@ export default Vue.extend({
       console.log("Current", doc.data());
     });
     this.playableMaze = this.generatePlayableMaze(5, {
-      latitude: 10,
+      latitude: -10,
       longitude: 10
     });
     this.dataReady = true;
@@ -47,7 +47,7 @@ export default Vue.extend({
       let mazeMap: Array<Array<simplePoint>> = [];
       for (let y = 0; y < size.longitude; y++) {
         mazeMap.push([]);
-        for (let x = 0; x < size.latitude; x++) {
+        for (let x = 0; x < Math.abs(size.latitude); x++) {
           let pointValue: string = `${y},${x}`;
           let formatedPoint: simplePoint = {};
           formatedPoint[pointValue] = false;
@@ -56,6 +56,7 @@ export default Vue.extend({
       }
       let endPosition: GeoPoint = this.selectEndOfMaze(mazeMap);
       let startPosition: GeoPoint = this.selectStartOfMaze(mazeMap);
+      console.log(startPosition);
       let completedMaze: maze = {
         mazeMap,
         startPosition,
@@ -82,7 +83,7 @@ export default Vue.extend({
     },
     selectStartOfMaze(maze: Array<Array<simplePoint>>) {
       let startPoint: GeoPoint = {
-        latitude: Math.round(Math.random() * maze[0].length),
+        latitude: -Math.round(Math.random() * maze[0].length),
         longitude: 0
       };
       return startPoint;
@@ -90,7 +91,7 @@ export default Vue.extend({
     selectEndOfMaze(maze: Array<Array<simplePoint>>) {
       // Since it is a rectangle this will work, but if randomly generated shape not work
       let endPoint: GeoPoint = {
-        latitude: Math.round(Math.random() * maze[0].length),
+        latitude: -Math.round(Math.random() * maze[0].length),
         longitude: maze.length - 1
       };
       return endPoint;

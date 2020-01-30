@@ -1,4 +1,4 @@
-import { player, GeoPoint } from "./playerType";
+import { GeoPoint } from "./playerType";
 
 export interface maze {
   startPosition: GeoPoint;

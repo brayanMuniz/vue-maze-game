@@ -48,6 +48,10 @@ export default Vue.extend({
       console.log(vertical, horizontal);
       if (this.isMoveValid(vertical, horizontal, this.mazeData)) {
         console.log("Move valid");
+        this.updatePosition({
+          latitude: 0,
+          longitude: 0
+        });
       } else {
         console.log("move NOT valid");
       }
@@ -59,15 +63,26 @@ export default Vue.extend({
       horizontal: number,
       maze: Array<Array<simplePoint>>
     ): Boolean {
+      // Todo: getting there
       let moveValid = false;
-      let oldVPoint = this.currentPostion.latitude;
-      let oldHPoint = this.currentPostion.longitude;
       let newVPoint = this.currentPostion.latitude + vertical;
       let newHPoint = this.currentPostion.longitude + horizontal;
-      let newPoint = `${oldVPoint + vertical},${oldHPoint + horizontal}`;
-      console.log(this.mazeData[newHPoint][newVPoint]);
-      console.log(this.currentPostion);
+      let newPoint = `${newHPoint},${newVPoint}`;
+      console.log(newHPoint, newVPoint, newPoint);
+      if (newHPoint < 0 || newVPoint > 0) {
+        console.log("out of bounds");
+        return moveValid;
+      }
+      let passValue = this.mazeData[newHPoint][Math.abs(newVPoint)][newPoint];
+      console.log(passValue);
+      if (passValue) {
+        moveValid = true;
+      }
       return moveValid;
+    },
+    updatePosition(newPosition: GeoPoint) {
+      this.currentPostion = newPosition;
+      this.$emit("updatePosition", this.currentPostion);
     }
     // Todo: if reached gameEnd() emit
   }

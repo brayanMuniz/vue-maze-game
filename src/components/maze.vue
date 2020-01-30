@@ -9,13 +9,19 @@
         v-for="col in maze.mazeMap[0].length"
         :key="col"
       >
+        <!-- https://pusher.com/tutorials/vue-custom-events -->
         <!-- Todo: insert player into start postion, load other players into this position   -->
-        <box
-          :endPoint="maze.endPosition"
-          :startPoint="maze.startPosition"
-          :mazeData="maze.mazeMap"
-          :player="playerData"
-        />
+        <!--  v-if="player.playerPosition == (key, col)" -->
+        <div>
+          <box
+            v-if="playerPositionShow(playerData.playerPosition, row, col)"
+            @updatePosition="updatePlayerPositionInMaze"
+            :endPoint="maze.endPosition"
+            :startPoint="maze.startPosition"
+            :mazeData="maze.mazeMap"
+            :player="playerData"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -29,8 +35,7 @@ import { maze } from "../types/mazeType";
 export default Vue.extend({
   name: "maze",
   props: {
-    startingPosition: Object as () => GeoPoint,
-    endPosition: Object as () => GeoPoint,
+    listOfPLayers: Array as () => Array<player>,
     playerData: Object as () => player,
     maze: Object as () => maze
   },
@@ -43,10 +48,9 @@ export default Vue.extend({
     this.dataReady = true;
   },
   methods: {
-    generateMazeFromData() {},
     passableClass(row: number, col: number) {
       let objectVal = this.maze.mazeMap[row][col];
-      let passableValue: boolean = objectVal[`${row},${col}`];
+      let passableValue: boolean = objectVal[`${row},${-col}`];
       if (passableValue == false) {
         return {
           "not-passable": true
@@ -56,6 +60,16 @@ export default Vue.extend({
           "background-color": "white"
         };
       }
+    },
+    updatePlayerPositionInMaze(test: any) {
+      console.log(test);
+    },
+    playerPositionShow(point: GeoPoint, row: number, col: number): Boolean {
+      console.log(point, row, col);
+      if (point.longitude == row && point.latitude == col) {
+        return true;
+      }
+      return false;
     }
   },
   components: {

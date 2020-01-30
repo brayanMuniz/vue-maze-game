@@ -29,12 +29,12 @@ export default Vue.extend({
   // gameSession?gameId=randomGeneratedGameId
   mounted() {
     // Top left will be 0,0 and down will be negative, right will be positive.
-    let gameSessionCollection = firebaseData
-      .firestore()
-      .collection("gameSessions");
-    gameSessionCollection.doc("kek").onSnapshot(doc => {
-      console.log("Current", doc.data());
-    });
+    // let gameSessionCollection = firebaseData
+    //   .firestore()
+    //   .collection("gameSessions");
+    // gameSessionCollection.doc("kek").onSnapshot(doc => {
+    //   console.log("Current", doc.data());
+    // });
     this.playableMaze = this.generatePlayableMaze(5, {
       latitude: -10,
       longitude: 10
@@ -48,7 +48,7 @@ export default Vue.extend({
       for (let y = 0; y < size.longitude; y++) {
         mazeMap.push([]);
         for (let x = 0; x < Math.abs(size.latitude); x++) {
-          let pointValue: string = `${y},${x}`;
+          let pointValue: string = `${y},${-x}`;
           let formatedPoint: simplePoint = {};
           formatedPoint[pointValue] = false;
           mazeMap[y].push(formatedPoint);
@@ -56,7 +56,7 @@ export default Vue.extend({
       }
       let endPosition: GeoPoint = this.selectEndOfMaze(mazeMap);
       let startPosition: GeoPoint = this.selectStartOfMaze(mazeMap);
-      console.log(startPosition);
+      console.log('startPosition', startPosition);
       let completedMaze: maze = {
         mazeMap,
         startPosition,

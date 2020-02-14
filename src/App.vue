@@ -4,7 +4,7 @@
       <div class="row" v-for="row in playableMaze.width" :key="row">
         <div class="col-sm m-0 p-0" v-for="col in playableMaze.height" :key="col">
           <div class="p-5 m-0" :class="generateBorders(row, col)">
-            player
+            {{row-1}},{{col-1}}
             <!-- <input type="text" class="form-control" v-focus /> -->
           </div>
         </div>
@@ -34,15 +34,16 @@ export default Vue.extend({
     console.log(newMaze);
     this.playableMaze = newMaze;
   },
+  // What I can figure out from this, it does not look like it. Fix it.
   methods: {
     generateBorders(x: number, y: number) {
       let point: string = `${x - 1},${y - 1}`;
       // Todo: add type to playableMaze
       let borders: any = {
-        "border-top": this.playableMaze.mazeMap[point].N,
-        "border-right": this.playableMaze.mazeMap[point].E,
-        "border-bottom": this.playableMaze.mazeMap[point].S,
-        "border-left": this.playableMaze.mazeMap[point].W
+        "border-top": !this.playableMaze.mazeMap[point].N,
+        "border-right": !this.playableMaze.mazeMap[point].E,
+        "border-bottom": !this.playableMaze.mazeMap[point].S,
+        "border-left": !this.playableMaze.mazeMap[point].W
       };
       return borders;
     }

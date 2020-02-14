@@ -29,11 +29,13 @@ export class Maze {
   }
   // http://reeborg.ca/docs/en/reference/mazes.html
   // randomly select start and number of destinations
+  // ! Problem removed wall between 3,1 3,2
+  // ! removed wall between 3,2 3,1
   generateMaze(solutions: number, width: number, height: number) {
     this.mazeMap = this.fillMaze(width, height);
     let doneMakingMaze = false;
-    //  We pick a random cell
-    // We select a random neighbouring cell(not visited) ...
+    // We pick a random cell
+    // We select a random neighbouring cell(not visited)
     // We remove the wall between the two cells and add the neighbouring cell to the list of cells having been visited.
     // If there are no unvisited neighbouring cell, we backtrack to one that has at least one unvisited neighbour; this is done until we backtract to the original cell.
     let firstPoint = `${Math.floor(Math.random() * width)},${Math.floor(
@@ -41,7 +43,9 @@ export class Maze {
     )}`;
     let leadingPoint = firstPoint;
     let counter: number = 1;
-    while (!doneMakingMaze) { // visitedCells.length !== height * width 
+    console.log(firstPoint);
+    while (!doneMakingMaze) {
+      // visitedCells.length !== height * width
       let sideCell: string = this.getRandomNeighborCell(leadingPoint);
       if (counter == 3) {
         doneMakingMaze = true;
@@ -61,13 +65,7 @@ export class Maze {
     console.log(this.mazeMap);
   }
 
-  private findUncheckedCell(): string {
-    let unCheckedCell = ''
-    
-    return unCheckedCell
-  }
-
-  // BOTTOM LEFT IS 0,0
+  // Figure out what 0,0 is
   private fillMaze(width: number, height: number): mazeMap {
     let mazeMap: mazeMap = {};
     for (let x = 0; x < width; x++) {
@@ -128,31 +126,23 @@ export class Maze {
   }
 
   private removeWall(point1: string, point2: string) {
-    let firstCell: any = {
-      height: Number(point1.split(",")[0]),
-      width: Number(point1.split(",")[1])
-    };
+    let firstCell: any = this.deConstructPoint(point1);
+    let secondCell: any = this.deConstructPoint(point2);
 
-    let secondCell: any = {
-      height: Number(point2.split(",")[0]),
-      width: Number(point2.split(",")[1])
-    };
-
-    if (firstCell.height > secondCell.height) {
+    if (firstCell.y > secondCell.y) {
       this.mazeMap[point1]["S"] = true;
       this.mazeMap[point2]["N"] = true;
-    } else if (firstCell.height < secondCell.height) {
+    } else if (firstCell.y < secondCell.y) {
       this.mazeMap[point1]["N"] = true;
       this.mazeMap[point2]["S"] = true;
-    } else if (firstCell.width > secondCell.width) {
+    } else if (firstCell.x > secondCell.x) {
       this.mazeMap[point1]["W"] = true;
       this.mazeMap[point2]["E"] = true;
-    } else if (firstCell.width < secondCell.width) {
+    } else if (firstCell.x < secondCell.x) {
       this.mazeMap[point1]["E"] = true;
       this.mazeMap[point2]["W"] = true;
     }
   }
-  // If thre are no other parameters will generate 0 or 1
 }
 
 interface mazeMap {

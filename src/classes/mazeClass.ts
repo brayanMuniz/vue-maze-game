@@ -42,34 +42,28 @@ export class Maze {
       Math.random() * height
     )}`;
     let leadingPoint = firstPoint;
-    let counter: number = 1;
-    console.log(firstPoint);
-    while (!doneMakingMaze) {
+    this.visitedCells.push(leadingPoint);
+    let counter: number = 0;
+    while (!doneMakingMaze && counter < 10) {
       // visitedCells.length !== height * width
-      let sideCell: string = this.getRandomNeighborCell(leadingPoint);
-      if (counter == 3) {
-        doneMakingMaze = true;
-        break;
-      }
+      let sideCell: string = this.getRandomNeighborCell(leadingPoint); // if None: return own point
       if (sideCell !== leadingPoint) {
         this.removeWall(leadingPoint, sideCell);
-        console.log("removed wall between", leadingPoint, sideCell);
         this.visitedCells.push(sideCell);
         leadingPoint = sideCell;
       } else {
-        leadingPoint = firstPoint;
+        leadingPoint = firstPoint; // Todo: select random cell from list of cells that have not been visited
         sideCell = this.getRandomNeighborCell(leadingPoint);
-        counter++;
       }
+      counter++;
     }
-    console.log(this.mazeMap);
   }
 
   // Figure out what 0,0 is
   private fillMaze(width: number, height: number): mazeMap {
     let mazeMap: mazeMap = {};
-    for (let x = 0; x < width; x++) {
-      for (let y = 0; y < height; y++) {
+    for (let x = width - 1; x >= 0; x--) {
+      for (let y = height - 1; y >= 0; y--) {
         let point: string = `${x},${y}`;
         mazeMap[point] = {
           visited: false,
@@ -82,20 +76,22 @@ export class Maze {
     }
     this.width = width;
     this.height = height;
+    console.log(mazeMap);
     return mazeMap;
   }
 
   private getRandomNeighborCell(point: string): string {
     let dPoint = this.deConstructPoint(point);
-    let playableCells = this.generateSideCells(dPoint.x, dPoint.y);
+    let playableCells = this.generatePlayableCells(dPoint.x, dPoint.y);
     if (Object.keys(playableCells).length != 0) {
-      let keys = Object.keys(playableCells);
-      return playableCells[keys[(keys.length * Math.random()) << 0]];
+      return Object.values(playableCells)[
+        Math.floor(Math.random() * Object.values(playableCells).length)
+      ];
     }
     return point;
   }
 
-  private generateSideCells(xPoint: number, yPoint: number) {
+  private generatePlayableCells(xPoint: number, yPoint: number): object {
     let points: any = {};
     if (xPoint + 1 < this.width) {
       points["right"] = `${xPoint + 1},${yPoint}`;
@@ -128,7 +124,6 @@ export class Maze {
   private removeWall(point1: string, point2: string) {
     let firstCell: any = this.deConstructPoint(point1);
     let secondCell: any = this.deConstructPoint(point2);
-
     if (firstCell.y > secondCell.y) {
       this.mazeMap[point1]["S"] = true;
       this.mazeMap[point2]["N"] = true;
@@ -142,7 +137,15 @@ export class Maze {
       this.mazeMap[point1]["E"] = true;
       this.mazeMap[point2]["W"] = true;
     }
+    console.log("removed wall between", point1, point2);
   }
+}
+
+interface playableCells {
+  right: string;
+  left: string;
+  up: string;
+  down: string;
 }
 
 interface mazeMap {

@@ -1,20 +1,24 @@
 <template>
   <div id="app">
-    <div class="container mt-2">
+    <!-- Because of bootstrap max width and height will be 144, make it 10000 -->
+    <div class="container mt-2" v-if="dataReady">
+      <!-- Is not displaying corretly. Start from left to right bottom left is 0,0 -->
+      <!-- <div v-for="(cell, point) in playableMaze.mazeMap" :key="point">{{point}}{{cell}}</div> -->
+      <!-- :class="generateBorders(row, col)"-->
+      <!-- {{showCorrectPoint(row, col)}} -->
       <div class="row" v-for="row in playableMaze.width" :key="row">
-        <div class="col-sm m-0 p-0" v-for="col in playableMaze.height" :key="col">
-          <div class="p-5 m-0" :class="generateBorders(row, col)">
-            {{row-1}},{{col-1}}
-            <!-- <input type="text" class="form-control" v-focus /> -->
-          </div>
-        </div>
+        <div
+          class="col-sm m-0 p-0"
+          v-for="col in playableMaze.height"
+          :class="generateBorders(row, col)"
+          :key="col"
+        >{{showCorrectPoint(row, col)}}</div>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-// :class="passableClass(row -1, col -1)"
 import Vue from "vue";
 import bootstrap from "bootstrap";
 import { firebaseData } from "@/firebaseConfig.ts";
@@ -24,28 +28,35 @@ export default Vue.extend({
   name: "app",
   data() {
     return {
-      playableMaze: {},
-      dataReady: false
+      playableMaze: Object(),
+      dataReady: false,
+      reverseList: [5, 4, -3, -2, -1],
+      tempRow: Number(),
+      tempCounter: Number()
     };
   },
   mounted() {
     let newMaze = new Maze([]);
     newMaze.generateMaze(1, 5, 5);
-    console.log(newMaze);
     this.playableMaze = newMaze;
+    this.tempRow = newMaze.height - 1;
+    this.tempCounter = newMaze.width - 1;
+    console.log(this.tempRow, this.tempCounter);
+    this.dataReady = true;
   },
-  // What I can figure out from this, it does not look like it. Fix it.
   methods: {
     generateBorders(x: number, y: number) {
-      let point: string = `${x - 1},${y - 1}`;
-      // Todo: add type to playableMaze
+      let correctPoint: string = this.showCorrectPoint(x, y);
       let borders: any = {
-        "border-top": !this.playableMaze.mazeMap[point].N,
-        "border-right": !this.playableMaze.mazeMap[point].E,
-        "border-bottom": !this.playableMaze.mazeMap[point].S,
-        "border-left": !this.playableMaze.mazeMap[point].W
+        "border-top": !this.playableMaze.mazeMap[correctPoint].N,
+        "border-right": !this.playableMaze.mazeMap[correctPoint].E,
+        "border-bottom": !this.playableMaze.mazeMap[correctPoint].S,
+        "border-left": !this.playableMaze.mazeMap[correctPoint].W
       };
       return borders;
+    },
+    showCorrectPoint(row: number, col: number): string {
+      return `${Math.abs(row - 1 - this.tempRow)},${col - 1}`;
     }
   }
 });

@@ -1,18 +1,15 @@
 <template>
   <div id="app">
-    <!-- Because of bootstrap max width and height will be 144, make it 10000 -->
-    <div class="container mt-2" v-if="dataReady">
-      <!-- Is not displaying corretly. Start from left to right bottom left is 0,0 -->
-      <!-- <div v-for="(cell, point) in playableMaze.mazeMap" :key="point">{{point}}{{cell}}</div> -->
-      <!-- :class="generateBorders(row, col)"-->
-      <!-- {{showCorrectPoint(row, col)}} -->
+    <div class="container-fluid mt-2 mx-2" v-if="dataReady">
       <div class="row" v-for="row in playableMaze.width" :key="row">
         <div
-          class="col-sm m-0 p-0"
+          class="col-sm m-0 p-0 border-dark"
           v-for="col in playableMaze.height"
           :class="generateBorders(row, col)"
           :key="col"
-        >{{showCorrectPoint(row, col)}}</div>
+        >
+          <div class="p-5">{{showCorrectPoint(row, col)}}</div>
+        </div>
       </div>
     </div>
   </div>
@@ -30,7 +27,6 @@ export default Vue.extend({
     return {
       playableMaze: Object(),
       dataReady: false,
-      reverseList: [5, 4, -3, -2, -1],
       tempRow: Number(),
       tempCounter: Number()
     };
@@ -56,7 +52,7 @@ export default Vue.extend({
       return borders;
     },
     showCorrectPoint(row: number, col: number): string {
-      return `${Math.abs(row - 1 - this.tempRow)},${col - 1}`;
+      return `${col - 1},${Math.abs(row - 1 - this.tempRow)}`;
     }
   }
 });

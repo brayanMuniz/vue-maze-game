@@ -8,8 +8,7 @@ export class Maze {
   players: Array<Player>;
   width: number;
   height: number;
-  pointToNumber: pointToNumber;
-  visitedCells: Array<string>;
+  unvisitedCells: Array<string>;
   constructor(players: Array<Player>) {
     this.solutions = 0;
     this.startPosition = ``;
@@ -18,48 +17,53 @@ export class Maze {
     this.players = players;
     this.width = 0;
     this.height = 0;
-    this.visitedCells = [];
-    // Todo: this
-    this.pointToNumber = {
-      left: 0,
-      right: 1,
-      up: 2,
-      down: 3
-    };
+    this.unvisitedCells = [];
   }
   // http://reeborg.ca/docs/en/reference/mazes.html
   // randomly select start and number of destinations
-  // ! Problem removed wall between 3,1 3,2
-  // ! removed wall between 3,2 3,1
   generateMaze(solutions: number, width: number, height: number) {
     this.mazeMap = this.fillMaze(width, height);
-    let doneMakingMaze = false;
-    // We pick a random cell
-    // We select a random neighbouring cell(not visited)
-    // We remove the wall between the two cells and add the neighbouring cell to the list of cells having been visited.
-    // If there are no unvisited neighbouring cell, we backtrack to one that has at least one unvisited neighbour; this is done until we backtract to the original cell.
-    let firstPoint = `${Math.floor(Math.random() * width)},${Math.floor(
+    this.unvisitedCells = Object.keys(this.mazeMap);
+    let firstPoint: string = `${Math.floor(Math.random() * width)},${Math.floor(
       Math.random() * height
     )}`;
-    let leadingPoint = firstPoint;
-    this.visitedCells.push(leadingPoint);
-    let counter: number = 0;
-    while (!doneMakingMaze && counter < 10) {
-      // visitedCells.length !== height * width
+    this.removeFromUnvisitedList(firstPoint);
+    let leadingPoint: string = firstPoint;
+    let count = this.unvisitedCells.length * 2; // To prevent an infinite loop
+    let switchCounter: number = 0; // ! this generates seperate blocks that are never able to meet eachother
+    while (this.unvisitedCells.length > 1 && count > 0) {
+      if (switchCounter > 4) {
+        firstPoint = this.returnUnvisitedCell();
+        console.log("New firstPoint", firstPoint);
+        switchCounter = 0;
+      }
       let sideCell: string = this.getRandomNeighborCell(leadingPoint); // if None: return own point
       if (sideCell !== leadingPoint) {
         this.removeWall(leadingPoint, sideCell);
-        this.visitedCells.push(sideCell);
+        this.removeFromUnvisitedList(sideCell);
         leadingPoint = sideCell;
       } else {
-        leadingPoint = firstPoint; // Todo: select random cell from list of cells that have not been visited
-        sideCell = this.getRandomNeighborCell(leadingPoint);
+        console.log(`switch, ${leadingPoint} with ${firstPoint}`);
+        leadingPoint = firstPoint;
+        switchCounter++;
       }
-      counter++;
+      count--;
     }
   }
 
-  // Figure out what 0,0 is
+  private returnUnvisitedCell() {
+    return this.unvisitedCells[
+      Math.floor(Math.random() * this.unvisitedCells.length)
+    ];
+  }
+
+  private removeFromUnvisitedList(point: string) {
+    const index = this.unvisitedCells.indexOf(point);
+    if (index > -1) {
+      this.unvisitedCells.splice(index, 1);
+    }
+  }
+
   private fillMaze(width: number, height: number): mazeMap {
     let mazeMap: mazeMap = {};
     for (let x = width - 1; x >= 0; x--) {
@@ -107,7 +111,7 @@ export class Maze {
     }
     let playableCells: any = {};
     for (let direction in points) {
-      if (!this.visitedCells.includes(points[direction])) {
+      if (this.unvisitedCells.includes(points[direction])) {
         playableCells[direction] = points[direction];
       }
     }
@@ -120,7 +124,7 @@ export class Maze {
       y: Number(point.split(",")[1])
     };
   }
-
+  // TODO: FIX THIS
   private removeWall(point1: string, point2: string) {
     let firstCell: any = this.deConstructPoint(point1);
     let secondCell: any = this.deConstructPoint(point2);
@@ -141,13 +145,6 @@ export class Maze {
   }
 }
 
-interface playableCells {
-  right: string;
-  left: string;
-  up: string;
-  down: string;
-}
-
 interface mazeMap {
   [key: string]: {
     visited: boolean;
@@ -157,11 +154,4 @@ interface mazeMap {
     E: boolean;
     W: boolean;
   };
-}
-
-interface pointToNumber {
-  left: 0;
-  right: 1;
-  up: 2;
-  down: 3;
 }

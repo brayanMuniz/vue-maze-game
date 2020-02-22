@@ -60,7 +60,7 @@ export class Maze {
     if (newBlock.length != 0 && !blocks.includes(newBlock)) {
       blocks.push(newBlock);
     }
-    
+
     this.mergeBlocks(blocks);
   }
 
@@ -80,8 +80,36 @@ export class Maze {
         secondPointBlockIdx: Number()
       };
       let readyToSeperate: boolean = false;
-
+      while (readyToSeperate == false) {
+        let startingBlock = 0;
+        let blockCounter = startingBlock + 1;
+        for (let i = startingBlock; i < blocks.length; i++) {
+          blocks[startingBlock].forEach(point => {
+            if (readyToSeperate === false) {
+              let dPoint = this.deConstructPoint(point);
+              let neighborPoints: Array<string> = Object.values(
+                this.generatePlayableCells(
+                  dPoint.x,
+                  dPoint.y,
+                  Object.keys(this.mazeMap)
+                )
+              );
+              neighborPoints.forEach(neighborPoint => {
+                if (blocks[blockCounter].includes(neighborPoint)) {
+                  bridge.firstPoint = point;
+                  bridge["firstPointBlockIdx"] = i;
+                  bridge["secondPoint"] = neighborPoint;
+                  bridge["secondPointBlockIdx"] = blockCounter;
+                  readyToSeperate = true;
+                }
+              });
+            }
+          });
+        }
+      }
       for (let i = 0; i < blocks.length - 1; i++) {
+        let foundMerge: boolean = false;
+
         if (readyToSeperate) {
           break;
         }
@@ -126,6 +154,39 @@ export class Maze {
       loopBlocker--;
     }
     console.log("Done merge");
+  }
+
+  private findMergeBetweenBlocks(
+    firstBlock: Array<string>,
+    secondBlock: Array<string>
+  ) {
+    let answer: any = {
+      mergedBlock: [],
+      foundMerge: false,
+      firstPoint: String(),
+      secondPoint: String()
+    };
+    firstBlock.forEach(point => {
+      if (answer.foundMerge == false) {
+        let dPoint = this.deConstructPoint(point);
+        let neighborPoints: Array<string> = Object.values(
+          this.generatePlayableCells(
+            dPoint.x,
+            dPoint.y,
+            Object.keys(this.mazeMap)
+          )
+        );
+        neighborPoints.forEach(neighborPoint => {
+          if (secondBlock.includes(neighborPoint)) {
+            answer.mergedBlock = [...new Set(firstBlock.concat(secondBlock))];
+            answer.foundMerge = true;
+            answer.firstPoint = point;
+            answer.secondPoint = neighborPoint;
+          }
+        });
+      }
+    });
+    return answer;
   }
 
   private returnUnvisitedCell() {
@@ -236,7 +297,6 @@ export class Maze {
 interface mazeMap {
   [key: string]: {
     visited: boolean;
-    // Todo: give time codes so I dont have to wirte if else if else
     N: boolean;
     S: boolean;
     E: boolean;

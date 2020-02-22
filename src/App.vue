@@ -28,16 +28,13 @@ export default Vue.extend({
       playableMaze: Object(),
       dataReady: false,
       tempRow: Number(),
-      tempCounter: Number()
     };
   },
   mounted() {
     let newMaze = new Maze([]);
-    newMaze.generateMaze(1, 5, 5);
+    newMaze.generateMaze(1, 6, 6);
     this.playableMaze = newMaze;
     this.tempRow = newMaze.height - 1;
-    this.tempCounter = newMaze.width - 1;
-    console.log(this.tempRow, this.tempCounter);
     this.dataReady = true;
   },
   methods: {

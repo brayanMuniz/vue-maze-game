@@ -19,36 +19,113 @@ export class Maze {
     this.height = 0;
     this.unvisitedCells = [];
   }
-  // http://reeborg.ca/docs/en/reference/mazes.html
-  // randomly select start and number of destinations
   generateMaze(solutions: number, width: number, height: number) {
     this.mazeMap = this.fillMaze(width, height);
     this.unvisitedCells = Object.keys(this.mazeMap);
     let firstPoint: string = `${Math.floor(Math.random() * width)},${Math.floor(
       Math.random() * height
     )}`;
+    console.log("First point", firstPoint);
     this.removeFromUnvisitedList(firstPoint);
     let leadingPoint: string = firstPoint;
-    let count = this.unvisitedCells.length * 2; // To prevent an infinite loop
-    let switchCounter: number = 0; // ! this generates seperate blocks that are never able to meet eachother
-    while (this.unvisitedCells.length > 1 && count > 0) {
-      if (switchCounter > 4) {
+    let blocks: Array<Array<string>> = [];
+    let newBlock: Array<string> = [firstPoint];
+    let count = this.unvisitedCells.length * 3;
+    let switchCounter: number = 0;
+    // this generates seperate blocks that are never able to meet eachother
+    while (this.unvisitedCells.length > 0 && count > 0) {
+      if (switchCounter > 3) {
         firstPoint = this.returnUnvisitedCell();
-        console.log("New firstPoint", firstPoint);
+        blocks.push(newBlock);
+        newBlock = [firstPoint];
         switchCounter = 0;
+        this.removeFromUnvisitedList(firstPoint);
       }
-      let sideCell: string = this.getRandomNeighborCell(leadingPoint); // if None: return own point
+      let sideCell: string = this.getRandomNeighborCell(
+        leadingPoint,
+        this.unvisitedCells
+      );
+
       if (sideCell !== leadingPoint) {
         this.removeWall(leadingPoint, sideCell);
         this.removeFromUnvisitedList(sideCell);
         leadingPoint = sideCell;
+        newBlock.push(leadingPoint);
       } else {
-        console.log(`switch, ${leadingPoint} with ${firstPoint}`);
         leadingPoint = firstPoint;
         switchCounter++;
       }
       count--;
     }
+    if (newBlock.length != 0 && !blocks.includes(newBlock)) {
+      blocks.push(newBlock);
+    }
+    
+    this.mergeBlocks(blocks);
+  }
+
+  private mergeBlocks(blocks: Array<Array<string>>) {
+    let loopBlocker = blocks.length * 100;
+    blocks = blocks.sort((a, b) => {
+      return a.length - b.length;
+    });
+    blocks.forEach(block => {
+      console.log(block);
+    });
+    while (blocks.length > 1 && loopBlocker > 0) {
+      let bridge: any = {
+        firstPoint: String(),
+        firstPointBlockIdx: Number(),
+        secondPoint: String(),
+        secondPointBlockIdx: Number()
+      };
+      let readyToSeperate: boolean = false;
+
+      for (let i = 0; i < blocks.length - 1; i++) {
+        if (readyToSeperate) {
+          break;
+        }
+        blocks[i].forEach(point => {
+          if (readyToSeperate === false) {
+            let dPoint = this.deConstructPoint(point);
+            let neighborPoints: Array<string> = Object.values(
+              this.generatePlayableCells(
+                dPoint.x,
+                dPoint.y,
+                Object.keys(this.mazeMap)
+              )
+            );
+            neighborPoints.forEach(neighborPoint => {
+              if (blocks[i + 1].includes(neighborPoint)) {
+                bridge.firstPoint = point;
+                bridge["firstPointBlockIdx"] = i;
+                bridge["secondPoint"] = neighborPoint;
+                bridge["secondPointBlockIdx"] = i + 1;
+                readyToSeperate = true;
+              }
+            });
+          }
+        });
+      }
+
+      if (readyToSeperate) {
+        this.removeWall(bridge.firstPoint, bridge.secondPoint);
+        let mergedBlock: Array<string> = [
+          ...new Set(
+            blocks[bridge.firstPointBlockIdx].concat(
+              blocks[bridge.secondPointBlockIdx]
+            )
+          )
+        ];
+        blocks.splice(bridge.firstPointBlockIdx, 1);
+        blocks.splice(bridge.secondPointBlockIdx, 1);
+        blocks.push(mergedBlock);
+        readyToSeperate = false;
+      }
+
+      loopBlocker--;
+    }
+    console.log("Done merge");
   }
 
   private returnUnvisitedCell() {
@@ -61,6 +138,8 @@ export class Maze {
     const index = this.unvisitedCells.indexOf(point);
     if (index > -1) {
       this.unvisitedCells.splice(index, 1);
+    } else {
+      console.error("WHT");
     }
   }
 
@@ -80,13 +159,19 @@ export class Maze {
     }
     this.width = width;
     this.height = height;
-    console.log(mazeMap);
     return mazeMap;
   }
 
-  private getRandomNeighborCell(point: string): string {
+  private getRandomNeighborCell(
+    point: string,
+    unvisitedCells: Array<string>
+  ): string {
     let dPoint = this.deConstructPoint(point);
-    let playableCells = this.generatePlayableCells(dPoint.x, dPoint.y);
+    let playableCells = this.generatePlayableCells(
+      dPoint.x,
+      dPoint.y,
+      unvisitedCells
+    );
     if (Object.keys(playableCells).length != 0) {
       return Object.values(playableCells)[
         Math.floor(Math.random() * Object.values(playableCells).length)
@@ -95,7 +180,11 @@ export class Maze {
     return point;
   }
 
-  private generatePlayableCells(xPoint: number, yPoint: number): object {
+  private generatePlayableCells(
+    xPoint: number,
+    yPoint: number,
+    unvisitedCells: Array<string>
+  ): object {
     let points: any = {};
     if (xPoint + 1 < this.width) {
       points["right"] = `${xPoint + 1},${yPoint}`;
@@ -111,7 +200,7 @@ export class Maze {
     }
     let playableCells: any = {};
     for (let direction in points) {
-      if (this.unvisitedCells.includes(points[direction])) {
+      if (unvisitedCells.includes(points[direction])) {
         playableCells[direction] = points[direction];
       }
     }
@@ -124,7 +213,7 @@ export class Maze {
       y: Number(point.split(",")[1])
     };
   }
-  // TODO: FIX THIS
+
   private removeWall(point1: string, point2: string) {
     let firstCell: any = this.deConstructPoint(point1);
     let secondCell: any = this.deConstructPoint(point2);
@@ -141,7 +230,6 @@ export class Maze {
       this.mazeMap[point1]["E"] = true;
       this.mazeMap[point2]["W"] = true;
     }
-    console.log("removed wall between", point1, point2);
   }
 }
 

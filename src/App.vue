@@ -2,7 +2,7 @@
   <div id="app">
     <div class="container">
       <button @click="generateMazeSession()">startSession</button>
-      <!-- AntWnn37HeSw4xRPy2s3 -->
+      <!-- AntWnn37HeSw4xRPy2s3 Jxfy6Aa0w3n3d5U45nyQ -->
       <div class="input-group input-group-sm">
         <input type="text" placeholder="sessionId" v-model.trim="sessionId" class="form-control" />
       </div>
@@ -49,9 +49,8 @@ Vue.directive("focus", {
   }
 });
 // Todo:
-// 1. Be able to join maze session AntWnn37HeSw4xRPy2s3
-// 1.5 generate and show the maze
 // 2. have a subcollection of players
+// 2.1 when join/generate maze add self to player collection
 // 2.5 update the players in real time
 export default Vue.extend({
   name: "app",
@@ -69,7 +68,7 @@ export default Vue.extend({
   },
   mounted() {
     let newMaze = new Maze([]);
-    newMaze.generateMaze(1, 5, 5);
+    newMaze.generateMaze(1, 11, 11);
     this.playableMaze = newMaze;
     this.tempRow = this.playableMaze.height - 1;
     this.startPostion = this.playableMaze.startPosition;

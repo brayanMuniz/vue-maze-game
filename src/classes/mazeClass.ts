@@ -75,7 +75,31 @@ export class Maze {
         player.updatePosition(x, y);
       }
     });
-    console.log("moved player", playerId);
+  }
+
+  public checkPlayerMove(playerId: string, x: number, y: number): boolean {
+    let playerCanMove: boolean = false;
+    let direction: string = "";
+    let playerPosition: string;
+    if (x == 1 && y == 0) {
+      direction = "E";
+    } else if (x == -1 && y == 0) {
+      direction = "W";
+    } else if (y == 1 && x == 0) {
+      direction = "N";
+    } else if (y == -1 && x == 0) {
+      direction = "S";
+    }
+    if (direction != "") {
+      this.players.forEach(player => {
+        if (player.playerId == playerId) {
+          playerPosition = player.getCurrentPosition();
+        }
+      });
+      playerCanMove = this.mazeMap[playerPosition][direction];
+    }
+
+    return playerCanMove;
   }
 
   private generateSolutions(amountOfSolutions: number) {
@@ -109,7 +133,6 @@ export class Maze {
       for (let y = height - 1; y >= 0; y--) {
         let point: string = `${x},${y}`;
         mazeMap[point] = {
-          visited: false,
           N: false,
           S: false,
           E: false,
@@ -195,7 +218,6 @@ export class Maze {
 
 interface mazeMap {
   [key: string]: {
-    visited: boolean;
     N: boolean;
     S: boolean;
     E: boolean;

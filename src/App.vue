@@ -8,11 +8,18 @@
           :class="generateCellClasses(row, col)"
           :key="col"
         >
-          <!-- v-if="showPlayer(row, col, )" -->
-          <div
-            class="p-5"
-          >{{showPlayer(showCorrectPoint(row, col), playableMaze.players)}} {{showCorrectPoint(row, col)}}</div>
-          <!-- <div v-if="player">Player</div> -->
+          <div class="p-5">
+            <input
+              @keyup.up="movePlayer('randomGeneratePlayerId', 0 ,1)"
+              @keyup.down="movePlayer('randomGeneratePlayerId', 0 ,-1)"
+              @keyup.left="movePlayer('randomGeneratePlayerId', -1 ,0)"
+              @keyup.right="movePlayer('randomGeneratePlayerId', 1 ,0)"
+              v-if="showPlayer(showCorrectPoint(row, col), playableMaze.players)"
+              v-focus
+              class="form-control"
+            />
+            <!-- Uncomment this line to show points {{showCorrectPoint(row, col)}} -->
+          </div>
         </div>
       </div>
     </div>
@@ -25,7 +32,11 @@ import bootstrap from "bootstrap";
 import { firebaseData } from "@/firebaseConfig.ts";
 import { Maze } from "./classes/mazeClass";
 import { Player } from "./classes/playerClass";
-
+Vue.directive("focus", {
+  inserted: function(el) {
+    el.focus();
+  }
+});
 export default Vue.extend({
   name: "app",
   data() {
@@ -48,8 +59,6 @@ export default Vue.extend({
       "randomGeneratePlayerId"
     );
     this.playableMaze.addPlayer(testPlayer);
-    this.movePlayer("randomGeneratePlayerId", 1, 0);
-    console.log(this.playableMaze.players);
     this.dataReady = true;
   },
   methods: {
@@ -87,7 +96,9 @@ export default Vue.extend({
       return newPlayer;
     },
     movePlayer(playerId: string, x: number, y: number) {
-      this.playableMaze.movePLayer(playerId, x, y);
+      if (this.playableMaze.checkPlayerMove(playerId, x, y)) {
+        this.playableMaze.movePLayer(playerId, x, y);
+      }
     }
   }
 });

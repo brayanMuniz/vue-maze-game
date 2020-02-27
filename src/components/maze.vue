@@ -28,17 +28,11 @@
 </template>
 <script lang="ts">
 import Vue from "vue";
-import { player, GeoPoint } from "@/types/playerType";
 import box from "@/components/box.vue";
-import { maze } from "../types/mazeType";
 
 export default Vue.extend({
   name: "maze",
-  props: {
-    listOfPLayers: Array as () => Array<player>,
-    playerData: Object as () => player,
-    maze: Object as () => maze
-  },
+  props: {},
   data() {
     return {
       dataReady: false
@@ -47,34 +41,7 @@ export default Vue.extend({
   mounted() {
     this.dataReady = true;
   },
-  methods: {
-    passableClass(row: number, col: number) {
-      let objectVal = this.maze.mazeMap[row][col];
-      let passableValue: boolean = objectVal[`${row},${-col}`];
-      if (passableValue == false) {
-        return {
-          "not-passable": true
-        };
-      } else {
-        return {
-          "background-color": "white"
-        };
-      }
-    },
-    updatePlayerPositionInMaze(test: any) {
-      console.log(test);
-    },
-    playerPositionShow(point: GeoPoint, row: number, col: number): Boolean {
-      console.log(point, row, col);
-      if (point.longitude == row && point.latitude == col) {
-        return true;
-      }
-      return false;
-    }
-  },
-  components: {
-    box
-  }
+  methods: {}
 });
 </script>
 

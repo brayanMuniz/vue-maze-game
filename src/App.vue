@@ -1,5 +1,13 @@
 <template>
   <div id="app">
+    <div class="container">
+      <button @click="generateMazeSession()">startSession</button>
+      <!-- AntWnn37HeSw4xRPy2s3 -->
+      <div class="input-group input-group-sm">
+        <input type="text" placeholder="sessionId" v-model.trim="sessionId" class="form-control" />
+      </div>
+      <button @click="joinSession(sessionId)">Join Game</button>
+    </div>
     <div class="container-fluid mt-2 mx-2" v-if="dataReady">
       <div class="row" v-for="row in playableMaze.width" :key="row">
         <div
@@ -9,16 +17,18 @@
           :key="col"
         >
           <div class="p-5">
-            <input
-              @keyup.up="movePlayer('randomGeneratePlayerId', 0 ,1)"
-              @keyup.down="movePlayer('randomGeneratePlayerId', 0 ,-1)"
-              @keyup.left="movePlayer('randomGeneratePlayerId', -1 ,0)"
-              @keyup.right="movePlayer('randomGeneratePlayerId', 1 ,0)"
-              v-if="showPlayer(showCorrectPoint(row, col), playableMaze.players)"
-              v-focus
-              class="form-control"
-            />
             <!-- Uncomment this line to show points {{showCorrectPoint(row, col)}} -->
+            <div class="input-group input-group-sm">
+              <input
+                @keyup.up="movePlayer('randomGeneratePlayerId', 0 ,1)"
+                @keyup.down="movePlayer('randomGeneratePlayerId', 0 ,-1)"
+                @keyup.left="movePlayer('randomGeneratePlayerId', -1 ,0)"
+                @keyup.right="movePlayer('randomGeneratePlayerId', 1 ,0)"
+                v-if="showPlayer(showCorrectPoint(row, col), playableMaze.players)"
+                v-focus
+                class="form-control m-1 p-1"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -29,6 +39,7 @@
 <script lang="ts">
 import Vue from "vue";
 import bootstrap from "bootstrap";
+import store from "@/store/store.ts";
 import { firebaseData } from "@/firebaseConfig.ts";
 import { Maze } from "./classes/mazeClass";
 import { Player } from "./classes/playerClass";
@@ -37,6 +48,11 @@ Vue.directive("focus", {
     el.focus();
   }
 });
+// Todo:
+// 1. Be able to join maze session AntWnn37HeSw4xRPy2s3
+// 1.5 generate and show the maze
+// 2. have a subcollection of players
+// 2.5 update the players in real time
 export default Vue.extend({
   name: "app",
   data() {
@@ -45,7 +61,10 @@ export default Vue.extend({
       dataReady: false,
       tempRow: Number(),
       startPostion: String(),
-      players: Array<Player>()
+      players: Array<Player>(),
+      sessionId: String(),
+      // has not being implemented yet
+      myPlayerId: String() // Should prevent the player from selecting another player and moving them
     };
   },
   mounted() {
@@ -59,9 +78,36 @@ export default Vue.extend({
       "randomGeneratePlayerId"
     );
     this.playableMaze.addPlayer(testPlayer);
+    console.log(this.playableMaze);
     this.dataReady = true;
   },
   methods: {
+    generateMazeSession() {
+      console.log(this.playableMaze);
+      store
+        .dispatch("makeGameSession", this.playableMaze)
+        .then(res => {
+          console.log(res);
+        })
+        .catch(err => {
+          console.log(err);
+        });
+    },
+    async joinSession(sessionId: string) {
+      this.dataReady = false;
+      await store
+        .dispatch("getMazeDataOnce", sessionId)
+        .then(mazeData => {
+          this.playableMaze = mazeData;
+          this.tempRow = this.playableMaze.height - 1;
+          this.startPostion = this.playableMaze.startPosition;
+          console.log(this.playableMaze);
+        })
+        .catch(err => {
+          console.error(err);
+        });
+      this.dataReady = true;
+    },
     generateCellClasses(x: number, y: number) {
       let correctPoint: string = this.showCorrectPoint(x, y);
       let allClasses: any = {

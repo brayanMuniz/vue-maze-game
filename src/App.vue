@@ -2,11 +2,12 @@
   <div id="app">
     <div class="container">
       <button @click="generateMazeSession()">startSession</button>
-      <!-- AntWnn37HeSw4xRPy2s3 Jxfy6Aa0w3n3d5U45nyQ -->
+      <!-- AntWnn37HeSw4xRPy2s3 -->
       <div class="input-group input-group-sm">
         <input type="text" placeholder="sessionId" v-model.trim="sessionId" class="form-control" />
       </div>
       <button @click="joinSession(sessionId)">Join Game</button>
+      <button @click="addPlayerToDB( playableMaze.players[0], sessionId)">addPlayer</button>
     </div>
     <div class="container-fluid mt-2 mx-2" v-if="dataReady">
       <div class="row" v-for="row in playableMaze.width" :key="row">
@@ -16,7 +17,7 @@
           :class="generateCellClasses(row, col)"
           :key="col"
         >
-          <div class="p-5">
+          <div class="p-3">
             <!-- Uncomment this line to show points {{showCorrectPoint(row, col)}} -->
             <div class="input-group input-group-sm">
               <input
@@ -26,7 +27,9 @@
                 @keyup.right="movePlayer('randomGeneratePlayerId', 1 ,0)"
                 v-if="showPlayer(showCorrectPoint(row, col), playableMaze.players)"
                 v-focus
-                class="form-control m-1 p-1"
+                class="form-control m-0"
+                style="width: 1px"
+                v-model="playerName"
               />
             </div>
           </div>
@@ -43,6 +46,7 @@ import store from "@/store/store.ts";
 import { firebaseData } from "@/firebaseConfig.ts";
 import { Maze } from "./classes/mazeClass";
 import { Player } from "./classes/playerClass";
+import { playerGameSession } from "./storeModules/fbPlayer";
 Vue.directive("focus", {
   inserted: function(el) {
     el.focus();
@@ -63,7 +67,8 @@ export default Vue.extend({
       players: Array<Player>(),
       sessionId: String(),
       // has not being implemented yet
-      myPlayerId: String() // Should prevent the player from selecting another player and moving them
+      myPlayerId: String(), // Should prevent the player from selecting another player and moving them
+      playerName: String()
     };
   },
   mounted() {
@@ -77,13 +82,13 @@ export default Vue.extend({
       "randomGeneratePlayerId"
     );
     this.playableMaze.addPlayer(testPlayer);
-    console.log(this.playableMaze);
+    this.playerName = "T";
     this.dataReady = true;
   },
   methods: {
-    generateMazeSession() {
+    async generateMazeSession() {
       console.log(this.playableMaze);
-      store
+      await store
         .dispatch("makeGameSession", this.playableMaze)
         .then(res => {
           console.log(res);
@@ -107,6 +112,23 @@ export default Vue.extend({
         });
       this.dataReady = true;
     },
+    async addPlayerToDB(player: Player, mazeId: string) {
+      let data: playerGameSession = {
+        gameId: mazeId,
+        player: player
+      };
+      store
+        .dispatch("addPlayerToSession", data)
+        .then(res => {
+          // Todo: update in vuex
+          this.myPlayerId = res.id;
+        })
+        .catch(err => {
+          console.error(err);
+        });
+    },
+    async getPLayersData() {},
+    async sendPlayerMove() {},
     generateCellClasses(x: number, y: number) {
       let correctPoint: string = this.showCorrectPoint(x, y);
       let allClasses: any = {

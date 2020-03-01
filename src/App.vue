@@ -2,7 +2,7 @@
   <div id="app">
     <div class="container">
       <button @click="generateMazeSession()">startSession</button>
-      <!-- AntWnn37HeSw4xRPy2s3 -->
+      <!-- AntWnn37HeSw4xRPy2s3, 3dj0vsO4fypj8Agy8gqs -->
       <div class="input-group input-group-sm">
         <input type="text" placeholder="sessionId" v-model.trim="sessionId" class="form-control" />
       </div>
@@ -21,10 +21,10 @@
             <!-- Uncomment this line to show points {{showCorrectPoint(row, col)}} -->
             <div class="input-group input-group-sm">
               <input
-                @keyup.up="movePlayer('randomGeneratePlayerId', 0 ,1)"
-                @keyup.down="movePlayer('randomGeneratePlayerId', 0 ,-1)"
-                @keyup.left="movePlayer('randomGeneratePlayerId', -1 ,0)"
-                @keyup.right="movePlayer('randomGeneratePlayerId', 1 ,0)"
+                @keyup.up="movePlayer(myPlayerId, 0 ,1)"
+                @keyup.down="movePlayer(myPlayerId, 0 ,-1)"
+                @keyup.left="movePlayer(myPlayerId, -1 ,0)"
+                @keyup.right="movePlayer(myPlayerId, 1 ,0)"
                 v-if="showPlayer(showCorrectPoint(row, col), playableMaze.players)"
                 v-focus
                 class="form-control m-0"
@@ -66,8 +66,7 @@ export default Vue.extend({
       startPostion: String(),
       players: Array<Player>(),
       sessionId: String(),
-      // has not being implemented yet
-      myPlayerId: String(), // Should prevent the player from selecting another player and moving them
+      myPlayerId: String(),
       playerName: String()
     };
   },
@@ -79,7 +78,7 @@ export default Vue.extend({
     this.startPostion = this.playableMaze.startPosition;
     let testPlayer: Player = this.generatePlayer(
       this.startPostion,
-      "randomGeneratePlayerId"
+      ""
     );
     this.playableMaze.addPlayer(testPlayer);
     this.playerName = "T";
@@ -87,14 +86,38 @@ export default Vue.extend({
   },
   methods: {
     async generateMazeSession() {
+      this.dataReady = false;
+      let newMaze = new Maze([]);
+      newMaze.generateMaze(1, 11, 11);
+      this.playableMaze = newMaze;
+      this.tempRow = this.playableMaze.height - 1;
+      this.startPostion = this.playableMaze.startPosition;
       console.log(this.playableMaze);
       await store
         .dispatch("makeGameSession", this.playableMaze)
-        .then(res => {
-          console.log(res);
+        .then(async mazeDataDoc => {
+          this.sessionId = mazeDataDoc.id;
+          let defaultPlayerId = "";
+          let newPlayer: Player = this.generatePlayer(
+            this.startPostion,
+            defaultPlayerId
+          );
+          this.playableMaze.addPlayer(newPlayer);
+          await this.addPlayerToDB(newPlayer, this.sessionId).then(
+            playerDoc => {
+              this.myPlayerId = playerDoc.id;
+              this.playableMaze.changePlayerId(
+                defaultPlayerId,
+                this.myPlayerId
+              );
+              console.log(this.playableMaze);
+              this.dataReady = true;
+            }
+          );
         })
         .catch(err => {
           console.log(err);
+          alert("help");
         });
     },
     async joinSession(sessionId: string) {
@@ -117,17 +140,13 @@ export default Vue.extend({
         gameId: mazeId,
         player: player
       };
-      store
-        .dispatch("addPlayerToSession", data)
-        .then(res => {
-          // Todo: update in vuex
-          this.myPlayerId = res.id;
-        })
-        .catch(err => {
-          console.error(err);
-        });
+      return store.dispatch("addPlayerToSession", data).catch(err => {
+        console.error(err);
+      });
     },
-    async getPLayersData() {},
+    async getPLayersData() {
+      store.dispatch("getPlayerData");
+    },
     async sendPlayerMove() {},
     generateCellClasses(x: number, y: number) {
       let correctPoint: string = this.showCorrectPoint(x, y);
@@ -157,9 +176,8 @@ export default Vue.extend({
       });
       return playerInPoint;
     },
-    generatePlayer(startPosition: string, playerId: string) {
-      let newPlayer: Player = new Player(startPosition, playerId);
-      console.log("Made new player ", newPlayer);
+    generatePlayer(startPosition: string, id: string) {
+      let newPlayer: Player = new Player(startPosition, id);
       return newPlayer;
     },
     movePlayer(playerId: string, x: number, y: number) {

@@ -37,7 +37,7 @@ const actions: ActionTree<any, any> = {
       .collection("gameSessions");
 
     let formatedMaze = mazeConverter.toFireStore(payload);
-    await gameSessionCollection.add(formatedMaze);
+    return await gameSessionCollection.add(formatedMaze);
   },
 
   async getMazeDataOnce({ commit }, payload: string) {

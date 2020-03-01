@@ -69,6 +69,14 @@ export class Maze {
     this.players.push(player);
   }
 
+  public changePlayerId(oldPlayerId: string, newPLayerId: string) {
+    this.players.forEach(player => {
+      if (player.playerId == oldPlayerId) {
+        player.uppdatePLayerId(newPLayerId);
+      }
+    });
+  }
+
   public movePLayer(playerId: string, x: number, y: number) {
     this.players.forEach(player => {
       if (player.playerId == playerId) {

@@ -2,12 +2,14 @@
   <div id="app">
     <div class="container">
       <button @click="generateMazeSession()">startSession</button>
-      <!-- AntWnn37HeSw4xRPy2s3, 3dj0vsO4fypj8Agy8gqs -->
+      <!-- AntWnn37HeSw4xRPy2s3, 241m776ej6r17eunsAq9 -->
       <div class="input-group input-group-sm">
         <input type="text" placeholder="sessionId" v-model.trim="sessionId" class="form-control" />
+        <input type="text" placeholder="plyerName" v-model="playerName" class="form-control" />
       </div>
       <button @click="joinSession(sessionId)">Join Game</button>
       <button @click="addPlayerToDB( playableMaze.players[0], sessionId)">addPlayer</button>
+      <button @click="updatePlayerName(sessionId, playerId, playerName)">updatePlayerName</button>
     </div>
     <div class="container-fluid mt-2 mx-2" v-if="dataReady">
       <div class="row" v-for="row in playableMaze.width" :key="row">
@@ -28,7 +30,6 @@
                 v-if="showPlayer(showCorrectPoint(row, col), playableMaze.players)"
                 v-focus
                 class="form-control m-0"
-                style="width: 1px"
                 v-model="playerName"
               />
             </div>
@@ -46,14 +47,13 @@ import store from "@/store/store.ts";
 import { firebaseData } from "@/firebaseConfig.ts";
 import { Maze } from "./classes/mazeClass";
 import { Player } from "./classes/playerClass";
-import { playerGameSession } from "./storeModules/fbPlayer";
+import { playerGameSession, playerSnapshot } from "./storeModules/fbPlayer";
 Vue.directive("focus", {
   inserted: function(el) {
     el.focus();
   }
 });
 // Todo:
-// 2. have a subcollection of players
 // 2.1 when join/generate maze add self to player collection
 // 2.5 update the players in real time
 export default Vue.extend({
@@ -70,19 +70,64 @@ export default Vue.extend({
       playerName: String()
     };
   },
-  mounted() {
-    let newMaze = new Maze([]);
-    newMaze.generateMaze(1, 11, 11);
-    this.playableMaze = newMaze;
-    this.tempRow = this.playableMaze.height - 1;
-    this.startPostion = this.playableMaze.startPosition;
-    let testPlayer: Player = this.generatePlayer(
-      this.startPostion,
-      ""
-    );
-    this.playableMaze.addPlayer(testPlayer);
-    this.playerName = "T";
-    this.dataReady = true;
+  async mounted() {
+    let defaultSession: string = "241m776ej6r17eunsAq9";
+    let allPlayers: Array<Player> = [];
+    // Todo: make gameReady an interface
+    let gameReady = {
+      mazeReady: false,
+      playerDataReady: false,
+      userReady: false,
+      playerMovesReady: true
+    };
+    await this.joinSession(defaultSession)
+      .then((mazeDataResult: Maze) => {
+        this.setMaze(mazeDataResult, defaultSession);
+        gameReady.mazeReady = true;
+      })
+      .catch(err => {
+        console.error(err);
+      });
+    await this.getPlayersFromSession(defaultSession)
+      .then(playerSnapshot => {
+        playerSnapshot.forEach((playerDoc: playerSnapshot) => {
+          let newPlayer: Player = new Player(
+            playerDoc.data().currentPosition,
+            playerDoc.id
+          );
+          allPlayers.push(newPlayer);
+        });
+        this.playableMaze.replacePlayers(allPlayers);
+        gameReady.playerDataReady = true;
+      })
+      .catch(err => {
+        console.error(err);
+      });
+
+    if (this.myPlayerId == "") {
+      let unusedPlayerId: string = this.playableMaze.returnUnusedPlayerId();
+      if (unusedPlayerId == "") {
+        // make a new player and add it to the maze
+      } else {
+        this.changePlayerValue(true, unusedPlayerId, defaultSession).then(
+          userReady => {
+            gameReady.userReady = true;
+            this.myPlayerId = unusedPlayerId;
+          }
+        );
+      }
+    }
+    // Part 1:
+    // look for a player that is not in use and has the current position to starting position
+    // make your playerId
+    // if no such player generate player and add to maze
+    // Part 2:
+    // add property to player class that is a firebase snapshot to listen to player updates in realtime
+
+    if (gameReady.mazeReady && gameReady.playerDataReady) {
+      console.log(this.playableMaze);
+      this.dataReady = true;
+    }
   },
   methods: {
     async generateMazeSession() {
@@ -122,18 +167,10 @@ export default Vue.extend({
     },
     async joinSession(sessionId: string) {
       this.dataReady = false;
-      await store
-        .dispatch("getMazeDataOnce", sessionId)
-        .then(mazeData => {
-          this.playableMaze = mazeData;
-          this.tempRow = this.playableMaze.height - 1;
-          this.startPostion = this.playableMaze.startPosition;
-          console.log(this.playableMaze);
-        })
-        .catch(err => {
-          console.error(err);
-        });
-      this.dataReady = true;
+      return await store.dispatch("getMazeDataOnce", sessionId);
+    },
+    async getPlayersFromSession(sessionId: string) {
+      return await store.dispatch("getPlayerData", sessionId);
     },
     async addPlayerToDB(player: Player, mazeId: string) {
       let data: playerGameSession = {
@@ -144,10 +181,33 @@ export default Vue.extend({
         console.error(err);
       });
     },
-    async getPLayersData() {
-      store.dispatch("getPlayerData");
+    async changePlayerValue(
+      playingValue: boolean,
+      playerId: string,
+      gameId: string
+    ) {
+      return store.dispatch("updatePlayerValue", {
+        playingValue,
+        playerId,
+        gameId
+      });
     },
-    async sendPlayerMove() {},
+    updatePlayerName(gameId: string, playerId: string, newPLayerName: string) {
+      return store.dispatch("updatePlayerName", {
+        gameId,
+        playerId,
+        newPLayerName
+      });
+    },
+    setMaze(mazeData: Maze, mazeId: string) {
+      this.playableMaze = mazeData;
+      this.tempRow = this.playableMaze.height - 1;
+      this.startPostion = this.playableMaze.startPosition;
+      this.sessionId = mazeId;
+    },
+    addPLayerToMaze(player: Player) {
+      this.playableMaze.addPlayer(player);
+    },
     generateCellClasses(x: number, y: number) {
       let correctPoint: string = this.showCorrectPoint(x, y);
       let allClasses: any = {

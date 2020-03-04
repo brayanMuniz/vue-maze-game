@@ -1,17 +1,32 @@
 export class Player {
   currentPosition: string;
   playerId: string;
-  constructor(startPosition: string, playerId?: string) {
+  currentlyPlaying: boolean;
+  constructor(startPosition: string, playerId?: string, playing?: boolean) {
     this.currentPosition = startPosition;
+    this.playerId = "";
+    this.currentlyPlaying = false;
     if (playerId) {
       this.playerId = playerId;
-    } else {
-      this.playerId = "";
+    }
+    if (playing) {
+      this.currentlyPlaying = true;
     }
   }
 
   getCurrentPosition() {
     return this.currentPosition;
+  }
+  public getIfUsing() {
+    return this.currentlyPlaying;
+  }
+
+  public getPLayerId() {
+    return this.playerId;
+  }
+
+  public updateCurrenltyUsing(using: boolean) {
+    this.currentlyPlaying = using;
   }
 
   public updatePosition(newX: number, newY: number) {

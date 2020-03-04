@@ -2,7 +2,7 @@ import { ActionTree } from "vuex";
 import { GetterTree } from "vuex";
 import { MutationTree } from "vuex";
 import { firebaseData } from "@/firebaseConfig.ts";
-import { Maze } from "@/classes/mazeClass";
+import { fromFirestoreData, Maze } from "@/classes/mazeClass";
 let mazeConverter = {
   toFireStore: function(maze: Maze) {
     return {
@@ -10,16 +10,12 @@ let mazeConverter = {
       startPosition: maze.startPosition,
       endPositions: maze.endPositions,
       mazeMap: maze.mazeMap,
-      // players: maze.players,
       width: maze.width,
       height: maze.height
     };
   },
-  // this will be used later to join sessions
-  fromFireStore: function(firebaseMazeData: any) {
-    let mazeData: Maze = firebaseMazeData;
-    mazeData.players = [];
-    return mazeData;
+  fromFireStore: function(firebaseMazeData: fromFirestoreData) {
+    return new Maze([], firebaseMazeData);
   }
 };
 

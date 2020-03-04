@@ -1,5 +1,5 @@
 import { Player } from "./playerClass";
-
+// Todo: make new maze class that has the player capabilities and inherits from this base class
 export class Maze {
   solutions: number;
   startPosition: string;
@@ -10,7 +10,7 @@ export class Maze {
   height: number;
   unvisitedCells: Array<string>;
   blocks: Array<Array<string>>;
-  constructor(players: Array<Player>) {
+  constructor(players: Array<Player>, fromFirestore?: fromFirestoreData) {
     this.solutions = 0;
     this.startPosition = ``;
     this.endPositions = [];
@@ -20,10 +20,26 @@ export class Maze {
     this.height = 0;
     this.unvisitedCells = [];
     this.blocks = [];
+    if (fromFirestore != undefined) {
+      this.solutions = fromFirestore.solutions;
+      this.startPosition = fromFirestore.startPosition;
+      this.endPositions = fromFirestore.endPositions;
+      this.mazeMap = fromFirestore.mazeMap;
+      this.width = fromFirestore.width;
+      this.height = fromFirestore.height;
+    }
   }
 
-  // Todo: update the point interface to include a endpoint field and update it in the generate solutions
-  // Todo: sort through all the blocks and make a super maze
+  public returnUnusedPlayerId(): string {
+    let playerId = "";
+    this.players.forEach(player => {
+      if (player.getIfUsing() === false) {
+        playerId = player.getPLayerId();
+      }
+    });
+    return playerId;
+  }
+
   public generateMaze(solutions: number, width: number, height: number) {
     this.mazeMap = this.fillMaze(width, height);
     this.unvisitedCells = Object.keys(this.mazeMap);
@@ -110,6 +126,10 @@ export class Maze {
     return playerCanMove;
   }
 
+  public replacePlayers(newPlayers: Array<Player>) {
+    this.players = newPlayers;
+  }
+
   private generateSolutions(amountOfSolutions: number) {
     let allPoints: Array<string> = Object.keys(this.mazeMap);
     for (let i = 0; i < amountOfSolutions; i++) {
@@ -117,7 +137,6 @@ export class Maze {
         allPoints[Math.floor(Math.random() * allPoints.length)]
       );
     }
-    console.log(this.startPosition, this.endPositions);
   }
 
   private returnUnvisitedCell() {
@@ -222,6 +241,15 @@ export class Maze {
       this.mazeMap[point2]["W"] = true;
     }
   }
+}
+
+export interface fromFirestoreData {
+  solutions: number;
+  startPosition: string;
+  endPositions: Array<string>;
+  mazeMap: mazeMap;
+  width: number;
+  height: number;
 }
 
 interface mazeMap {

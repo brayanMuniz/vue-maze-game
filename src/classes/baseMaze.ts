@@ -1,43 +1,30 @@
-import { Player } from "./playerClass";
-// Todo: make new maze class that has the player capabilities and inherits from this base class
 export class Maze {
   solutions: number;
   startPosition: string;
   endPositions: Array<string>;
   mazeMap: mazeMap;
-  players: Array<Player>;
   width: number;
   height: number;
-  unvisitedCells: Array<string>;
-  blocks: Array<Array<string>>;
-  constructor(players: Array<Player>, fromFirestore?: fromFirestoreData) {
+  private unvisitedCells: Array<string>;
+  private blocks: Array<Array<string>>;
+
+  constructor(fromFirestoreMazeData?: mazeData) {
     this.solutions = 0;
     this.startPosition = ``;
     this.endPositions = [];
     this.mazeMap = {};
-    this.players = players;
     this.width = 0;
     this.height = 0;
     this.unvisitedCells = [];
     this.blocks = [];
-    if (fromFirestore != undefined) {
-      this.solutions = fromFirestore.solutions;
-      this.startPosition = fromFirestore.startPosition;
-      this.endPositions = fromFirestore.endPositions;
-      this.mazeMap = fromFirestore.mazeMap;
-      this.width = fromFirestore.width;
-      this.height = fromFirestore.height;
+    if (fromFirestoreMazeData != undefined) {
+      this.solutions = fromFirestoreMazeData.solutions;
+      this.startPosition = fromFirestoreMazeData.startPosition;
+      this.endPositions = fromFirestoreMazeData.endPositions;
+      this.mazeMap = fromFirestoreMazeData.mazeMap;
+      this.width = fromFirestoreMazeData.width;
+      this.height = fromFirestoreMazeData.height;
     }
-  }
-
-  public returnUnusedPlayerId(): string {
-    let playerId = "";
-    this.players.forEach(player => {
-      if (player.getIfUsing() === false) {
-        playerId = player.getPLayerId();
-      }
-    });
-    return playerId;
   }
 
   public generateMaze(solutions: number, width: number, height: number) {
@@ -51,7 +38,7 @@ export class Maze {
     let leadingPoint: string = firstPoint;
     let newBlock: Array<string> = [firstPoint];
     let switchCounter: number = 0;
-    // this generates seperate blocks that are never able to meet eachother
+    // generates seperate blocks that are never able to meet eachother
     while (this.unvisitedCells.length > 0) {
       if (switchCounter > 3) {
         firstPoint = this.returnUnvisitedCell();
@@ -79,55 +66,6 @@ export class Maze {
       this.blocks.push(newBlock);
     }
     this.generateSolutions(solutions);
-  }
-
-  public addPlayer(player: Player) {
-    this.players.push(player);
-  }
-
-  public changePlayerId(oldPlayerId: string, newPLayerId: string) {
-    this.players.forEach(player => {
-      if (player.playerId == oldPlayerId) {
-        player.uppdatePLayerId(newPLayerId);
-      }
-    });
-  }
-
-  public movePLayer(playerId: string, x: number, y: number) {
-    this.players.forEach(player => {
-      if (player.playerId == playerId) {
-        player.updatePosition(x, y);
-      }
-    });
-  }
-
-  public checkPlayerMove(playerId: string, x: number, y: number): boolean {
-    let playerCanMove: boolean = false;
-    let direction: string = "";
-    let playerPosition: string;
-    if (x == 1 && y == 0) {
-      direction = "E";
-    } else if (x == -1 && y == 0) {
-      direction = "W";
-    } else if (y == 1 && x == 0) {
-      direction = "N";
-    } else if (y == -1 && x == 0) {
-      direction = "S";
-    }
-    if (direction != "") {
-      this.players.forEach(player => {
-        if (player.playerId == playerId) {
-          playerPosition = player.getCurrentPosition();
-        }
-      });
-      playerCanMove = this.mazeMap[playerPosition][direction];
-    }
-
-    return playerCanMove;
-  }
-
-  public replacePlayers(newPlayers: Array<Player>) {
-    this.players = newPlayers;
   }
 
   private generateSolutions(amountOfSolutions: number) {
@@ -243,7 +181,7 @@ export class Maze {
   }
 }
 
-export interface fromFirestoreData {
+export interface mazeData {
   solutions: number;
   startPosition: string;
   endPositions: Array<string>;
@@ -252,7 +190,7 @@ export interface fromFirestoreData {
   height: number;
 }
 
-interface mazeMap {
+export interface mazeMap {
   [key: string]: {
     N: boolean;
     S: boolean;

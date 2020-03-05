@@ -45,22 +45,26 @@ import Vue from "vue";
 import bootstrap from "bootstrap";
 import store from "@/store/store.ts";
 import { firebaseData } from "@/firebaseConfig.ts";
-import { Maze } from "./classes/mazeClass";
 import { Player } from "./classes/playerClass";
 import { playerGameSession, playerSnapshot } from "./storeModules/fbPlayer";
+import { Maze } from "./classes/baseMaze";
+import { firebaseMaze } from "./classes/dbMazeClass";
 Vue.directive("focus", {
   inserted: function(el) {
     el.focus();
   }
 });
-// Todo:
-// 2.1 when join/generate maze add self to player collection
-// 2.5 update the players in real time
+// Part 1:
+// look for a player that is not in use and has the current position to starting position
+// make your playerId
+// if no such player generate player and add to maze
+// Part 2:
+// add property to player class that is a firebase snapshot to listen to player updates in realtime
 export default Vue.extend({
   name: "app",
   data() {
     return {
-      playableMaze: new Maze([]),
+      playableMaze: new firebaseMaze([], ""),
       dataReady: false,
       tempRow: Number(),
       startPostion: String(),
@@ -117,13 +121,6 @@ export default Vue.extend({
         );
       }
     }
-    // Part 1:
-    // look for a player that is not in use and has the current position to starting position
-    // make your playerId
-    // if no such player generate player and add to maze
-    // Part 2:
-    // add property to player class that is a firebase snapshot to listen to player updates in realtime
-
     if (gameReady.mazeReady && gameReady.playerDataReady) {
       console.log(this.playableMaze);
       this.dataReady = true;

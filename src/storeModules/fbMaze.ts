@@ -2,7 +2,8 @@ import { ActionTree } from "vuex";
 import { GetterTree } from "vuex";
 import { MutationTree } from "vuex";
 import { firebaseData } from "@/firebaseConfig.ts";
-import { fromFirestoreData, Maze } from "@/classes/mazeClass";
+import { mazeData, Maze } from "@/classes/baseMaze";
+import { firebaseMaze } from "@/classes/dbMazeClass";
 let mazeConverter = {
   toFireStore: function(maze: Maze) {
     return {
@@ -14,8 +15,8 @@ let mazeConverter = {
       height: maze.height
     };
   },
-  fromFireStore: function(firebaseMazeData: fromFirestoreData) {
-    return new Maze([], firebaseMazeData);
+  fromFireStore: function(firebaseMazeData: mazeData, mazeId: string) {
+    return new firebaseMaze([], mazeId, firebaseMazeData);
   }
 };
 
@@ -45,7 +46,10 @@ const actions: ActionTree<any, any> = {
       .get()
       .then(mazeData => {
         if (mazeData.exists) {
-          convertedMaze = mazeConverter.fromFireStore(mazeData.data());
+          convertedMaze = mazeConverter.fromFireStore(
+            mazeData.data(),
+            mazeData.id
+          );
         }
       });
 

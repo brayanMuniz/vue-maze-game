@@ -12,30 +12,7 @@
       <button @click="updatePlayerName(sessionId, playerId, playerName)">updatePlayerName</button>
     </div>
     <div class="container-fluid mt-2 mx-2" v-if="dataReady">
-      <div class="row" v-for="row in playableMaze.width" :key="row">
-        <div
-          class="col-sm m-0 p-0 border-dark"
-          v-for="col in playableMaze.height"
-          :class="generateCellClasses(row, col)"
-          :key="col"
-        >
-          <div class="p-3">
-            <!-- Uncomment this line to show points {{showCorrectPoint(row, col)}} -->
-            <div class="input-group input-group-sm">
-              <input
-                @keyup.up="movePlayer(myPlayerId, 0 ,1)"
-                @keyup.down="movePlayer(myPlayerId, 0 ,-1)"
-                @keyup.left="movePlayer(myPlayerId, -1 ,0)"
-                @keyup.right="movePlayer(myPlayerId, 1 ,0)"
-                v-if="showPlayer(showCorrectPoint(row, col), playableMaze.players)"
-                v-focus
-                class="form-control m-0"
-                v-model="playerName"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+      <mazeComponent :playableMaze="playableMaze" :myPlayerId="myPlayerId" />
     </div>
   </div>
 </template>
@@ -44,6 +21,7 @@
 import Vue from "vue";
 import bootstrap from "bootstrap";
 import store from "@/store/store.ts";
+import mazeComponent from "@/components/mazeComponent.vue";
 import { firebaseData } from "@/firebaseConfig.ts";
 import { Player } from "./classes/playerClass";
 import { playerGameSession, playerSnapshot } from "./storeModules/fbPlayer";
@@ -54,6 +32,7 @@ Vue.directive("focus", {
     el.focus();
   }
 });
+// Check: dont send the amonut of blocks to fb
 // Part 1:
 // look for a player that is not in use and has the current position to starting position
 // make your playerId
@@ -64,9 +43,9 @@ export default Vue.extend({
   name: "app",
   data() {
     return {
-      playableMaze: new firebaseMaze([], ""),
+      localSession: true,
       dataReady: false,
-      tempRow: Number(),
+      playableMaze: new firebaseMaze([], ""),
       startPostion: String(),
       players: Array<Player>(),
       sessionId: String(),
@@ -75,66 +54,65 @@ export default Vue.extend({
     };
   },
   async mounted() {
-    let defaultSession: string = "241m776ej6r17eunsAq9";
-    let allPlayers: Array<Player> = [];
-    // Todo: make gameReady an interface
-    let gameReady = {
-      mazeReady: false,
-      playerDataReady: false,
-      userReady: false,
-      playerMovesReady: true
-    };
-    await this.joinSession(defaultSession)
-      .then((mazeDataResult: Maze) => {
-        this.setMaze(mazeDataResult, defaultSession);
-        gameReady.mazeReady = true;
-      })
-      .catch(err => {
-        console.error(err);
-      });
-    await this.getPlayersFromSession(defaultSession)
-      .then(playerSnapshot => {
-        playerSnapshot.forEach((playerDoc: playerSnapshot) => {
-          let newPlayer: Player = new Player(
-            playerDoc.data().currentPosition,
-            playerDoc.id
-          );
-          allPlayers.push(newPlayer);
+    if (!this.localSession) {
+      let defaultSession: string = "241m776ej6r17eunsAq9";
+      let allPlayers: Array<Player> = [];
+      // Todo: make gameReady an interface
+      let gameReady = {
+        mazeReady: false,
+        playerDataReady: false,
+        userReady: false,
+        playerMovesReady: true
+      };
+      await this.joinSession(defaultSession)
+        .then((mazeDataResult: firebaseMaze) => {
+          this.setMaze(mazeDataResult, defaultSession);
+          gameReady.mazeReady = true;
+        })
+        .catch(err => {
+          console.error(err);
         });
-        this.playableMaze.replacePlayers(allPlayers);
-        gameReady.playerDataReady = true;
-      })
-      .catch(err => {
-        console.error(err);
-      });
+      await this.getPlayersFromSession(defaultSession)
+        .then(playerSnapshot => {
+          playerSnapshot.forEach((playerDoc: playerSnapshot) => {
+            let newPlayer: Player = new Player(
+              playerDoc.data().currentPosition,
+              playerDoc.id
+            );
+            allPlayers.push(newPlayer);
+          });
+          this.playableMaze.replacePlayers(allPlayers);
+          gameReady.playerDataReady = true;
+        })
+        .catch(err => {
+          console.error(err);
+        });
 
-    if (this.myPlayerId == "") {
-      let unusedPlayerId: string = this.playableMaze.returnUnusedPlayerId();
-      if (unusedPlayerId == "") {
-        // make a new player and add it to the maze
-      } else {
-        this.changePlayerValue(true, unusedPlayerId, defaultSession).then(
-          userReady => {
-            gameReady.userReady = true;
-            this.myPlayerId = unusedPlayerId;
-          }
-        );
+      if (this.myPlayerId == "") {
+        let unusedPlayerId: string = this.playableMaze.returnUnusedPlayerId();
+        if (unusedPlayerId == "") {
+          // make a new player and add it to the maze
+        } else {
+          this.changePlayerValue(true, unusedPlayerId, defaultSession).then(
+            userReady => {
+              gameReady.userReady = true;
+              this.myPlayerId = unusedPlayerId;
+            }
+          );
+        }
       }
-    }
-    if (gameReady.mazeReady && gameReady.playerDataReady) {
-      console.log(this.playableMaze);
-      this.dataReady = true;
+      if (gameReady.mazeReady && gameReady.playerDataReady) {
+        this.dataReady = true;
+      }
     }
   },
   methods: {
     async generateMazeSession() {
       this.dataReady = false;
-      let newMaze = new Maze([]);
+      let newMaze = new firebaseMaze([], "");
       newMaze.generateMaze(1, 11, 11);
       this.playableMaze = newMaze;
-      this.tempRow = this.playableMaze.height - 1;
       this.startPostion = this.playableMaze.startPosition;
-      console.log(this.playableMaze);
       await store
         .dispatch("makeGameSession", this.playableMaze)
         .then(async mazeDataDoc => {
@@ -196,52 +174,19 @@ export default Vue.extend({
         newPLayerName
       });
     },
-    setMaze(mazeData: Maze, mazeId: string) {
+    setMaze(mazeData: firebaseMaze, mazeId: string) {
       this.playableMaze = mazeData;
       this.tempRow = this.playableMaze.height - 1;
       this.startPostion = this.playableMaze.startPosition;
       this.sessionId = mazeId;
     },
-    addPLayerToMaze(player: Player) {
-      this.playableMaze.addPlayer(player);
-    },
-    generateCellClasses(x: number, y: number) {
-      let correctPoint: string = this.showCorrectPoint(x, y);
-      let allClasses: any = {
-        "border-top": !this.playableMaze.mazeMap[correctPoint].N,
-        "border-right": !this.playableMaze.mazeMap[correctPoint].E,
-        "border-bottom": !this.playableMaze.mazeMap[correctPoint].S,
-        "border-left": !this.playableMaze.mazeMap[correctPoint].W
-      };
-      if (this.playableMaze.startPosition === correctPoint) {
-        allClasses["startPoint"] = true;
-      }
-      if (this.playableMaze.endPositions.includes(correctPoint)) {
-        allClasses["endPoint"] = true;
-      }
-      return allClasses;
-    },
-    showCorrectPoint(row: number, col: number): string {
-      return `${col - 1},${Math.abs(row - 1 - this.tempRow)}`;
-    },
-    showPlayer(correctPoint: string, listOfPLayers: Array<Player>): boolean {
-      let playerInPoint: boolean = false;
-      listOfPLayers.forEach(player => {
-        if (player.getCurrentPosition() == correctPoint) {
-          playerInPoint = true;
-        }
-      });
-      return playerInPoint;
-    },
     generatePlayer(startPosition: string, id: string) {
       let newPlayer: Player = new Player(startPosition, id);
       return newPlayer;
-    },
-    movePlayer(playerId: string, x: number, y: number) {
-      if (this.playableMaze.checkPlayerMove(playerId, x, y)) {
-        this.playableMaze.movePLayer(playerId, x, y);
-      }
     }
+  },
+  components: {
+    mazeComponent
   }
 });
 </script>

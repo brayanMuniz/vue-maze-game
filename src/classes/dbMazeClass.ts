@@ -36,12 +36,15 @@ export class firebaseMaze extends Maze {
     });
   }
 
-  public movePLayer(playerId: string, x: number, y: number) {
+  public movePLayer(playerId: string, x: number, y: number): string {
+    let newCurrentPosition: string = "";
     this.players.forEach(player => {
       if (player.playerId == playerId) {
         player.updatePosition(x, y);
+        newCurrentPosition = player.getCurrentPosition();
       }
     });
+    return newCurrentPosition;
   }
 
   public checkPlayerMove(playerId: string, x: number, y: number): boolean {

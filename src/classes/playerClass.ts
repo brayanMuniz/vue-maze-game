@@ -1,22 +1,38 @@
+import moment, { Moment } from "moment";
 export class Player {
   currentPosition: string;
   playerId: string;
   currentlyPlaying: boolean;
-  constructor(startPosition: string, playerId?: string, playing?: boolean) {
+  lastPlayerMove: number;
+  constructor(
+    startPosition: string,
+    playerId?: string,
+    playing?: boolean,
+    lastPlayerMove?: number
+  ) {
     this.currentPosition = startPosition;
     this.playerId = "";
     this.currentlyPlaying = false;
+    this.lastPlayerMove = moment().unix();
     if (playerId) {
       this.playerId = playerId;
     }
     if (playing) {
       this.currentlyPlaying = true;
     }
+    if (lastPlayerMove) {
+      this.lastPlayerMove = lastPlayerMove;
+    }
   }
 
-  getCurrentPosition() {
+  public getCurrentPosition() {
     return this.currentPosition;
   }
+
+  public getLastMoveTimeSeconds(): number {
+    return this.lastPlayerMove;
+  }
+
   public getIfUsing() {
     return this.currentlyPlaying;
   }

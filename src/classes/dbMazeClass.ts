@@ -1,6 +1,6 @@
 import { Maze, mazeData } from "./baseMaze";
 import { Player } from "./playerClass";
-
+import moment, { Moment } from "moment";
 export class firebaseMaze extends Maze {
   players: Array<Player>;
   mazeId: string;
@@ -14,10 +14,18 @@ export class firebaseMaze extends Maze {
     this.mazeId = mazeId;
   }
 
+  // Checks the currentlyPLaying field and the last playerMoveTime field.
+  // ? If I just use player last player move I wont need if playing field ?
+  // TODO: figure out why the time difference is so big 
   public returnUnusedPlayerId(): string {
     let playerId = "";
     this.players.forEach(player => {
-      if (player.getIfUsing() === false) {
+      let now: Moment = moment();
+      let playerTime: Moment = moment(player.getLastMoveTimeSeconds());
+      console.log(now, playerTime.unix(), playerTime.format("MM-DD-YYYY"));
+      let differenceMinutes: number = now.diff(playerTime, "minutes");
+      console.log("Difference in minutes since last move", differenceMinutes);
+      if (player.getIfUsing() === false || differenceMinutes > 5) {
         playerId = player.getPLayerId();
       }
     });

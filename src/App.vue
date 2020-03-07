@@ -43,7 +43,7 @@ export default Vue.extend({
   name: "app",
   data() {
     return {
-      localSession: true,
+      localSession: false,
       dataReady: false,
       playableMaze: new firebaseMaze([], ""),
       startPostion: String(),
@@ -97,11 +97,13 @@ export default Vue.extend({
             userReady => {
               gameReady.userReady = true;
               this.myPlayerId = unusedPlayerId;
+              console.log("now using player", this.myPlayerId);
             }
           );
         }
       }
       if (gameReady.mazeReady && gameReady.playerDataReady) {
+        console.log(this.playableMaze);
         this.dataReady = true;
       }
     }

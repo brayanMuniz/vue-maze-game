@@ -32,6 +32,7 @@ import store from "@/store/store.ts";
 import { firebaseMaze } from "../classes/dbMazeClass";
 import { Player } from "../classes/playerClass";
 import { playerMove } from "../storeModules/fbPlayer";
+import moment from "moment";
 Vue.directive("focus", {
   inserted: function(el) {
     el.focus();
@@ -49,6 +50,8 @@ export default Vue.extend({
       tempRow: Number(),
       gameId: String(),
       playerName: String(),
+      playerMoveTimeCount: 0,
+      playerMoveTimeCounterLimit: Number(), // this will update the lastPlayerMoveField. Dependent on size of maze
       playerMoveCount: 0,
       playerCountLimit: 3
     };
@@ -57,10 +60,21 @@ export default Vue.extend({
     this.dataReady = true;
     this.tempRow = this.playableMaze.height - 1;
     this.gameId = this.playableMaze.mazeId; // update propety to gameId
+    this.playerMoveTimeCounterLimit = Math.floor(
+      (this.playableMaze.height * this.playableMaze.width) / 10
+    );
   },
   methods: {
     async movePlayerDB(newMove: playerMove) {
       return store.dispatch("sendPlayerMove", newMove);
+    },
+    async lastMoveTimeUpdate(playerId: string) {
+      let payload = {
+        playerId,
+        gameId: this.gameId,
+        newLastMoveTimeSeconds: moment().unix()
+      };
+      return store.dispatch("updatePlayerLastMoveTime", payload);
     },
     addPLayerToMaze(player: Player) {
       this.playableMaze.addPlayer(player);
@@ -106,11 +120,22 @@ export default Vue.extend({
           gameID: this.gameId
         };
         this.playerMoveCount++;
+        this.playerMoveTimeCount++;
+        if (this.playerMoveTimeCount == this.playerMoveTimeCounterLimit) {
+          await this.lastMoveTimeUpdate(playerId)
+            .then(res => {
+              this.playerMoveTimeCount = 0;
+              console.log("Time Move Update DB");
+            })
+            .catch(err => {
+              console.error(err);
+            });
+        }
         if (this.playerMoveCount == this.playerCountLimit) {
           await this.movePlayerDB(playerMove)
             .then(res => {
               this.playerMoveCount = 0;
-              console.log("updatedPlayerMove in db");
+              console.log("Move Update DB");
             })
             .catch(err => {
               alert("stop");

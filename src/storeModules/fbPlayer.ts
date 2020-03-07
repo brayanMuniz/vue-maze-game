@@ -3,6 +3,7 @@ import { GetterTree } from "vuex";
 import { MutationTree } from "vuex";
 import { firebaseData } from "@/firebaseConfig.ts";
 import { Player } from "@/classes/playerClass";
+import moment from "moment";
 // Todo: change to shcema
 const dbAll = {
   gameSessions: "gameSessions",
@@ -21,10 +22,13 @@ let playerConverter = {
     return new Player(
       firebasePlayerData.currentPosition,
       firebasePlayerData.playerId,
-      firebasePlayerData.currentlyPlaying
+      firebasePlayerData.currentlyPlaying,
+      firebasePlayerData.lastPlayerMove
     );
   }
 };
+
+// ? Should I have a master playerDoc reference ?
 
 const state: playerState = {
   currentPlayers: Array<Player>()
@@ -92,6 +96,7 @@ const actions: ActionTree<any, any> = {
       currentPosition: payload.newPlayerPostion
     });
   },
+  // ? Could I have one master update player ?
   async updatePlayerValue({ commit }, payload: playingValue) {
     let playerDoc = firebaseData
       .firestore()
@@ -111,6 +116,17 @@ const actions: ActionTree<any, any> = {
     return playerDoc.update({
       playerName: payload.newPlayerName
     });
+  },
+  async updatePlayerLastMoveTime({ commit }, payload: any) {
+    let playerDoc = firebaseData
+      .firestore()
+      .collection(dbAll.gameSessions)
+      .doc(payload.gameId)
+      .collection(dbAll.players)
+      .doc(payload.playerId);
+    return playerDoc.update({
+      lastMoveTime: payload.newLastMoveTimeSeconds
+    });
   }
 };
 
@@ -124,6 +140,7 @@ export interface playerFireStoreData {
   currentPosition: string;
   playerId: string;
   currentlyPlaying: boolean;
+  lastPlayerMove: number
 }
 
 export interface playerSnapshot {

@@ -24,9 +24,14 @@ import store from "@/store/store.ts";
 import mazeComponent from "@/components/mazeComponent.vue";
 import { firebaseData } from "@/firebaseConfig.ts";
 import { Player } from "./classes/playerClass";
-import { playerGameSession, playerSnapshot } from "./storeModules/fbPlayer";
+import {
+  playerGameSession,
+  playerSnapshot,
+  playingValue
+} from "./storeModules/fbPlayer";
 import { Maze } from "./classes/baseMaze";
 import { firebaseMaze } from "./classes/dbMazeClass";
+import moment from "moment";
 Vue.directive("focus", {
   inserted: function(el) {
     el.focus();
@@ -77,7 +82,9 @@ export default Vue.extend({
           playerSnapshot.forEach((playerDoc: playerSnapshot) => {
             let newPlayer: Player = new Player(
               playerDoc.data().currentPosition,
-              playerDoc.id
+              playerDoc.id,
+              playerDoc.data().currentlyPlaying,
+              playerDoc.data().lastMoveTime
             );
             allPlayers.push(newPlayer);
           });
@@ -90,16 +97,25 @@ export default Vue.extend({
 
       if (this.myPlayerId == "") {
         let unusedPlayerId: string = this.playableMaze.returnUnusedPlayerId();
+        console.log("Unused Player Id", unusedPlayerId);
         if (unusedPlayerId == "") {
           // make a new player and add it to the maze
         } else {
-          this.changePlayerValue(true, unusedPlayerId, defaultSession).then(
-            userReady => {
+          this.changePlayerValue(
+            true,
+            unusedPlayerId,
+            defaultSession,
+            moment().unix()
+          )
+            .then(userReady => {
               gameReady.userReady = true;
               this.myPlayerId = unusedPlayerId;
               console.log("now using player", this.myPlayerId);
-            }
-          );
+            })
+            .catch(err => {
+              console.error(err);
+              gameReady.userReady = false;
+            });
         }
       }
       if (gameReady.mazeReady && gameReady.playerDataReady) {
@@ -161,13 +177,16 @@ export default Vue.extend({
     async changePlayerValue(
       playingValue: boolean,
       playerId: string,
-      gameId: string
+      gameId: string,
+      lastMoveTime: number
     ) {
-      return store.dispatch("updatePlayerValue", {
+      let newPlayerValue: playingValue = {
         playingValue,
+        gameId,
         playerId,
-        gameId
-      });
+        lastMoveTime
+      };
+      return store.dispatch("updatePlayerValue", newPlayerValue);
     },
     updatePlayerName(gameId: string, playerId: string, newPLayerName: string) {
       return store.dispatch("updatePlayerName", {

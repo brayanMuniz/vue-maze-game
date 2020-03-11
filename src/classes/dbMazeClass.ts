@@ -22,7 +22,7 @@ export class firebaseMaze extends Maze {
     this.players.forEach(player => {
       let now: Moment = moment();
       let playerTime: Moment = moment(player.getLastMoveTimeSeconds());
-      console.log(now, playerTime.unix(), playerTime.format("MM-DD-YYYY"));
+      console.log(playerTime.unix(), playerTime.format("MM-DD-YYYY"));
       let differenceMinutes: number = now.diff(playerTime, "minutes");
       console.log("Difference in minutes since last move", differenceMinutes);
       if (player.getIfUsing() === false || differenceMinutes > 5) {

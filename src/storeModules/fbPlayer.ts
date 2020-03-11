@@ -14,16 +14,19 @@ let playerConverter = {
   toFireStore: function(player: Player) {
     return {
       currentPosition: player.currentPosition,
-      playerId: player.playerId
+      playerId: player.playerId,
+      currentlyPlaying: player.getIfUsing(),
+      lastPlayerMove: player.getLastMoveTimeSeconds()
     };
   },
   // this will be used later to join sessions
   fromFireStore: function(firebasePlayerData: playerFireStoreData) {
+    console.log("Called", firebasePlayerData);
     return new Player(
       firebasePlayerData.currentPosition,
       firebasePlayerData.playerId,
       firebasePlayerData.currentlyPlaying,
-      firebasePlayerData.lastPlayerMove
+      firebasePlayerData.lastMoveTime
     );
   }
 };
@@ -73,9 +76,12 @@ const actions: ActionTree<any, any> = {
       .get()
       .then(querySnapshot => {
         querySnapshot.forEach(function(doc) {
+          console.log(doc.data());
           let newPLayer: Player = new Player(
             doc.data().currentPosition,
-            doc.id
+            doc.id,
+            doc.data().currentlyPlaying,
+            doc.data().lastMoveTime
           );
           allPlayers.push(newPLayer);
         });
@@ -104,7 +110,10 @@ const actions: ActionTree<any, any> = {
       .doc(payload.gameId)
       .collection(dbAll.players)
       .doc(payload.playerId);
-    return playerDoc.update({ currentlyPlaying: payload.playingValue });
+    return playerDoc.update({
+      currentlyPlaying: payload.playingValue,
+      lastMoveTime: payload.lastMoveTime
+    });
   },
   async updatePlayerName({ commit }, payload: any) {
     let playerDoc = firebaseData
@@ -134,13 +143,14 @@ export interface playingValue {
   gameId: string;
   playerId: string;
   playingValue: boolean;
+  lastMoveTime: number;
 }
 
 export interface playerFireStoreData {
   currentPosition: string;
   playerId: string;
   currentlyPlaying: boolean;
-  lastPlayerMove: number
+  lastMoveTime: number;
 }
 
 export interface playerSnapshot {

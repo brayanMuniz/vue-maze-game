@@ -3,7 +3,7 @@ export class Player {
   currentPosition: string;
   playerId: string;
   currentlyPlaying: boolean;
-  lastPlayerMove: number;
+  lastMoveTime: number;
   constructor(
     startPosition: string,
     playerId?: string,
@@ -13,15 +13,16 @@ export class Player {
     this.currentPosition = startPosition;
     this.playerId = "";
     this.currentlyPlaying = false;
-    this.lastPlayerMove = moment().unix();
-    if (playerId) {
+    this.lastMoveTime = moment().unix();
+    console.log(startPosition, playerId, playing, lastPlayerMove);
+    if (playerId != undefined) {
       this.playerId = playerId;
     }
-    if (playing) {
+    if (playing != undefined) {
       this.currentlyPlaying = true;
     }
-    if (lastPlayerMove) {
-      this.lastPlayerMove = lastPlayerMove;
+    if (lastPlayerMove != undefined) {
+      this.lastMoveTime = lastPlayerMove;
     }
   }
 
@@ -30,7 +31,7 @@ export class Player {
   }
 
   public getLastMoveTimeSeconds(): number {
-    return this.lastPlayerMove;
+    return this.lastMoveTime;
   }
 
   public getIfUsing() {

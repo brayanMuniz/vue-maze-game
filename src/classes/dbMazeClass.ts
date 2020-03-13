@@ -16,16 +16,15 @@ export class firebaseMaze extends Maze {
 
   // Checks the currentlyPLaying field and the last playerMoveTime field.
   // ? If I just use player last player move I wont need if playing field ?
-  // TODO: figure out why the time difference is so big 
+  // TODO: figure out why the time difference is so big
   public returnUnusedPlayerId(): string {
     let playerId = "";
     this.players.forEach(player => {
-      let now: Moment = moment();
-      let playerTime: Moment = moment(player.getLastMoveTimeSeconds());
-      console.log(playerTime.unix(), playerTime.format("MM-DD-YYYY"));
-      let differenceMinutes: number = now.diff(playerTime, "minutes");
-      console.log("Difference in minutes since last move", differenceMinutes);
-      if (player.getIfUsing() === false || differenceMinutes > 5) {
+      let nowInSeconds: number = moment().unix();
+      let playerTimeInSeconds: number = player.getLastMoveTimeSeconds();
+      let differenceInSeconds: number = nowInSeconds - playerTimeInSeconds;
+      console.log("Difference in seconds since last move", differenceInSeconds);
+      if (player.getIfUsing() === false || differenceInSeconds > 300) {
         playerId = player.getPLayerId();
       }
     });

@@ -8,7 +8,8 @@
         :key="col"
       >
         <div class="p-3">
-          <!-- Uncomment this line to show points {{showCorrectPoint(row, col)}} -->
+          <!-- Uncomment next line to show points -->
+          {{showCorrectPoint(row, col)}}
           <div class="input-group input-group-sm">
             <input
               @keyup.up="movePlayer(myPlayerId, 0 ,1)"
@@ -40,6 +41,7 @@ Vue.directive("focus", {
 });
 export default Vue.extend({
   name: "mazeComponent",
+  // Todo: add a local maze prop
   props: {
     playableMaze: firebaseMaze,
     myPlayerId: String

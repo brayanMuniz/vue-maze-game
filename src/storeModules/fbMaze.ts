@@ -1,9 +1,11 @@
 import { ActionTree } from "vuex";
 import { GetterTree } from "vuex";
 import { MutationTree } from "vuex";
-import { firebaseData } from "@/firebaseConfig.ts";
+import { firebaseData, dbSchema } from "@/firebaseConfig.ts";
 import { mazeData, Maze } from "@/classes/baseMaze";
 import { firebaseMaze } from "@/classes/dbMazeClass";
+import { Player } from "@/classes/playerClass";
+
 let mazeConverter = {
   toFireStore: function(maze: Maze) {
     return {
@@ -16,27 +18,25 @@ let mazeConverter = {
     };
   },
   fromFireStore: function(firebaseMazeData: mazeData, mazeId: string) {
-    return new firebaseMaze([], mazeId, firebaseMazeData);
+    let players: Array<Player> = [];
+    return new firebaseMaze(players, mazeId, firebaseMazeData);
   }
 };
 
 const state = {};
 const getters: GetterTree<any, any> = {};
-const mutations: MutationTree<any> = {
-  changeBitPrice(state, newBitPrice) {
-    state.currentBitPrice = newBitPrice;
-  }
-};
+const mutations: MutationTree<any> = {};
 const actions: ActionTree<any, any> = {
   async makeGameSession({ commit }, payload: Maze) {
     let gameSessionCollection = firebaseData
       .firestore()
-      .collection("gameSessions");
+      .collection(dbSchema.gameSessions);
 
     let formatedMaze = mazeConverter.toFireStore(payload);
     return await gameSessionCollection.add(formatedMaze);
   },
 
+  // Todo: fix this part
   async getMazeDataOnce({ commit }, payload: string) {
     let convertedMaze: any = {};
     await firebaseData

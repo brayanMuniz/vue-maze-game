@@ -13,8 +13,7 @@ export class Player {
     this.currentPosition = startPosition;
     this.playerId = "";
     this.currentlyPlaying = false;
-    this.lastMoveTime = moment().unix();
-    console.log(startPosition, playerId, playing, lastPlayerMove);
+    this.lastMoveTime = moment().unix(); 
     if (playerId != undefined) {
       this.playerId = playerId;
     }

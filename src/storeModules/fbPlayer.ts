@@ -1,14 +1,9 @@
 import { ActionTree } from "vuex";
 import { GetterTree } from "vuex";
 import { MutationTree } from "vuex";
-import { firebaseData } from "@/firebaseConfig.ts";
+import { firebaseData, dbSchema } from "@/firebaseConfig.ts";
 import { Player } from "@/classes/playerClass";
-import moment from "moment";
 // Todo: change to shcema
-const dbAll = {
-  gameSessions: "gameSessions",
-  players: "players"
-};
 
 let playerConverter = {
   toFireStore: function(player: Player) {
@@ -31,8 +26,6 @@ let playerConverter = {
   }
 };
 
-// ? Should I have a master playerDoc reference ?
-
 const state: playerState = {
   currentPlayers: Array<Player>()
 };
@@ -50,9 +43,9 @@ const actions: ActionTree<any, any> = {
   async addPlayerToSession({ commit }, payload: playerGameSession) {
     let mazePlayerSubCollection = firebaseData
       .firestore()
-      .collection(dbAll.gameSessions)
+      .collection(dbSchema.gameSessions)
       .doc(payload.gameId)
-      .collection(dbAll.players);
+      .collection(dbSchema.players);
 
     return await mazePlayerSubCollection.add(
       playerConverter.toFireStore(payload.player)
@@ -61,18 +54,18 @@ const actions: ActionTree<any, any> = {
   async getPlayerData({ commit }, gameId: string) {
     return await firebaseData
       .firestore()
-      .collection(dbAll.gameSessions)
+      .collection(dbSchema.gameSessions)
       .doc(gameId)
-      .collection(dbAll.players)
+      .collection(dbSchema.players)
       .get();
   },
   async getPlayerDataOnce({ commit }, gameId: string) {
     let allPlayers: Array<Player> = [];
     await firebaseData
       .firestore()
-      .collection(dbAll.gameSessions)
+      .collection(dbSchema.gameSessions)
       .doc(gameId)
-      .collection(dbAll.players)
+      .collection(dbSchema.players)
       .get()
       .then(querySnapshot => {
         querySnapshot.forEach(function(doc) {
@@ -93,9 +86,9 @@ const actions: ActionTree<any, any> = {
   async sendPlayerMove({ commit }, payload: playerMove) {
     const playerDoc = firebaseData
       .firestore()
-      .collection(dbAll.gameSessions)
+      .collection(dbSchema.gameSessions)
       .doc(payload.gameID)
-      .collection(dbAll.players)
+      .collection(dbSchema.players)
       .doc(payload.playerId);
 
     return await playerDoc.update({
@@ -106,9 +99,9 @@ const actions: ActionTree<any, any> = {
   async updatePlayerValue({ commit }, payload: playingValue) {
     let playerDoc = firebaseData
       .firestore()
-      .collection(dbAll.gameSessions)
+      .collection(dbSchema.gameSessions)
       .doc(payload.gameId)
-      .collection(dbAll.players)
+      .collection(dbSchema.players)
       .doc(payload.playerId);
     return playerDoc.update({
       currentlyPlaying: payload.playingValue,
@@ -118,9 +111,9 @@ const actions: ActionTree<any, any> = {
   async updatePlayerName({ commit }, payload: any) {
     let playerDoc = firebaseData
       .firestore()
-      .collection(dbAll.gameSessions)
+      .collection(dbSchema.gameSessions)
       .doc(payload.gameId)
-      .collection(dbAll.players)
+      .collection(dbSchema.players)
       .doc(payload.playerId);
     return playerDoc.update({
       playerName: payload.newPlayerName
@@ -129,9 +122,9 @@ const actions: ActionTree<any, any> = {
   async updatePlayerLastMoveTime({ commit }, payload: any) {
     let playerDoc = firebaseData
       .firestore()
-      .collection(dbAll.gameSessions)
+      .collection(dbSchema.gameSessions)
       .doc(payload.gameId)
-      .collection(dbAll.players)
+      .collection(dbSchema.players)
       .doc(payload.playerId);
     return playerDoc.update({
       lastMoveTime: payload.newLastMoveTimeSeconds

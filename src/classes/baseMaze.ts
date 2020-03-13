@@ -38,6 +38,7 @@ export class Maze {
     let leadingPoint: string = firstPoint;
     let newBlock: Array<string> = [firstPoint];
     let switchCounter: number = 0;
+    // select random point from block and select new point that way
     // generates seperate blocks that are never able to meet eachother
     while (this.unvisitedCells.length > 0) {
       if (switchCounter > 3) {
@@ -62,6 +63,7 @@ export class Maze {
         switchCounter++;
       }
     }
+
     if (newBlock.length != 0 && !this.blocks.includes(newBlock)) {
       this.blocks.push(newBlock);
     }

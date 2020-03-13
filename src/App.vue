@@ -37,6 +37,7 @@ Vue.directive("focus", {
     el.focus();
   }
 });
+// Main Problem: difference in time.
 // Check: dont send the amonut of blocks to fb
 // Part 1:
 // look for a player that is not in use and has the current position to starting position
@@ -63,20 +64,24 @@ export default Vue.extend({
       let defaultSession: string = "241m776ej6r17eunsAq9";
       let allPlayers: Array<Player> = [];
       // Todo: make gameReady an interface
+
       let gameReady = {
         mazeReady: false,
         playerDataReady: false,
         userReady: false,
         playerMovesReady: true
       };
+
       await this.joinSession(defaultSession)
         .then((mazeDataResult: firebaseMaze) => {
-          this.setMaze(mazeDataResult, defaultSession);
+          this.setMaze(mazeDataResult, defaultSession); // This should run after all conditions are met
           gameReady.mazeReady = true;
         })
         .catch(err => {
+          gameReady.mazeReady = false;
           console.error(err);
         });
+
       await this.getPlayersFromSession(defaultSession)
         .then(playerSnapshot => {
           playerSnapshot.forEach((playerDoc: playerSnapshot) => {
@@ -86,6 +91,7 @@ export default Vue.extend({
               playerDoc.data().currentlyPlaying,
               playerDoc.data().lastMoveTime
             );
+            console.log(newPlayer);
             allPlayers.push(newPlayer);
           });
           this.playableMaze.replacePlayers(allPlayers);
@@ -99,6 +105,7 @@ export default Vue.extend({
         let unusedPlayerId: string = this.playableMaze.returnUnusedPlayerId();
         console.log("Unused Player Id", unusedPlayerId);
         if (unusedPlayerId == "") {
+          console.log("You are not using a player, The maze is not playable.");
           // make a new player and add it to the maze
         } else {
           this.changePlayerValue(
@@ -118,8 +125,8 @@ export default Vue.extend({
             });
         }
       }
+
       if (gameReady.mazeReady && gameReady.playerDataReady) {
-        console.log(this.playableMaze);
         this.dataReady = true;
       }
     }
@@ -127,7 +134,9 @@ export default Vue.extend({
   methods: {
     async generateMazeSession() {
       this.dataReady = false;
-      let newMaze = new firebaseMaze([], "");
+      let players: Array<Player> = [];
+      let mazeId: string = "";
+      let newMaze = new firebaseMaze(players, mazeId);
       newMaze.generateMaze(1, 11, 11);
       this.playableMaze = newMaze;
       this.startPostion = this.playableMaze.startPosition;

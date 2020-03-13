@@ -2,7 +2,7 @@ import { ActionTree } from "vuex";
 import { GetterTree } from "vuex";
 import { MutationTree } from "vuex";
 import { firebaseData, dbSchema } from "@/firebaseConfig.ts";
-import { Player } from "@/classes/playerClass";
+import { Player } from "@/classes/Player";
 // Todo: change to shcema
 
 let playerConverter = {

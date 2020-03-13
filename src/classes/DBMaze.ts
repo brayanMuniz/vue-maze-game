@@ -1,5 +1,5 @@
-import { Maze, mazeData } from "./baseMaze";
-import { Player } from "./playerClass";
+import { Maze, mazeData } from "./BaseMaze";
+import { Player } from "./Player";
 import moment, { Moment } from "moment";
 export class firebaseMaze extends Maze {
   players: Array<Player>;
@@ -24,7 +24,7 @@ export class firebaseMaze extends Maze {
       let playerTimeInSeconds: number = player.getLastMoveTimeSeconds();
       let differenceInSeconds: number = nowInSeconds - playerTimeInSeconds;
       console.log("Difference in seconds since last move", differenceInSeconds);
-      if (player.getIfUsing() === false || differenceInSeconds > 300) {
+      if (player.getIfUsing() === false || differenceInSeconds > 100) {
         playerId = player.getPLayerId();
       }
     });

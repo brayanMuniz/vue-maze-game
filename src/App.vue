@@ -9,7 +9,7 @@
       </div>
       <button @click="joinSession(sessionId)">Join Game</button>
       <button @click="addPlayerToDB( playableMaze.players[0], sessionId)">addPlayer</button>
-      <button @click="updatePlayerName(sessionId, playerId, playerName)">updatePlayerName</button>
+      <button @click="updatePlayerName(sessionId, myPlayerId, playerName)">updatePlayerName</button>
     </div>
     <div class="container-fluid mt-2 mx-2" v-if="dataReady">
       <mazeComponent :playableMaze="playableMaze" :myPlayerId="myPlayerId" />
@@ -23,14 +23,14 @@ import bootstrap from "bootstrap";
 import store from "@/store/store.ts";
 import mazeComponent from "@/components/mazeComponent.vue";
 import { firebaseData } from "@/firebaseConfig.ts";
-import { Player } from "./classes/playerClass";
+import { Player } from "./classes/Player";
 import {
   playerGameSession,
   playerSnapshot,
   playingValue
 } from "./storeModules/fbPlayer";
-import { Maze } from "./classes/baseMaze";
-import { firebaseMaze } from "./classes/dbMazeClass";
+import { Maze } from "./classes/BaseMaze";
+import { firebaseMaze } from "./classes/DBMaze";
 import moment from "moment";
 Vue.directive("focus", {
   inserted: function(el) {
@@ -49,7 +49,7 @@ export default Vue.extend({
   name: "app",
   data() {
     return {
-      localSession: false,
+      localSession: true,
       dataReady: false,
       playableMaze: new firebaseMaze([], ""),
       startPostion: String(),
@@ -103,9 +103,25 @@ export default Vue.extend({
 
       if (this.myPlayerId == "") {
         let unusedPlayerId: string = this.playableMaze.returnUnusedPlayerId();
-        console.log("Unused Player Id", unusedPlayerId);
+        console.log("Unused Player Id:", unusedPlayerId);
         if (unusedPlayerId == "") {
-          console.log("You are not using a player, The maze is not playable.");
+          let newPlayer: Player = new Player(
+            this.startPostion,
+            "",
+            true,
+            moment().unix()
+          );
+          await this.addPlayerToDB(newPlayer, defaultSession)
+            .then(res => {
+              console.log("You are using a player", res.id);
+            })
+            .catch(err => {
+              console.log(
+                "You are not using a player, The maze is not playable."
+              );
+
+              console.log(err);
+            });
           // make a new player and add it to the maze
         } else {
           this.changePlayerValue(
@@ -130,6 +146,23 @@ export default Vue.extend({
         this.dataReady = true;
       }
     }
+    // Todo: add and make these functions, but man im tired so later.
+    // await firebaseData.auth().onAuthStateChanged(user => {
+    //   if (user) {
+    //     this.$store.commit("setUserAuth");
+    //     if (this.userHasNoData()) {
+    //       this.getUserData()
+    //         .then(userDataGotten => {
+    //           this.$store.commit("setUserData", userDataGotten);
+    //         })
+    //         .catch(err => {
+    //           console.log("TCL: beforeCreate -> err", err);
+    //         });
+    //     }
+    //   } else {
+    //     this.$store.commit("clearUser");
+    //   }
+    // });
   },
   methods: {
     async generateMazeSession() {
@@ -179,7 +212,7 @@ export default Vue.extend({
         gameId: mazeId,
         player: player
       };
-      return store.dispatch("addPlayerToSession", data).catch(err => {
+      return await store.dispatch("addPlayerToSession", data).catch(err => {
         console.error(err);
       });
     },
@@ -197,16 +230,22 @@ export default Vue.extend({
       };
       return store.dispatch("updatePlayerValue", newPlayerValue);
     },
-    updatePlayerName(gameId: string, playerId: string, newPLayerName: string) {
-      return store.dispatch("updatePlayerName", {
-        gameId,
-        playerId,
-        newPLayerName
-      });
+    async updatePlayerName(
+      gameId: string,
+      playerId: string,
+      newPLayerName: string
+    ) {
+      if (gameId && playerId && newPLayerName) {
+        console.log(gameId, playerId, newPLayerName);
+        return await store.dispatch("updatePlayerName", {
+          gameId,
+          playerId,
+          newPLayerName
+        });
+      }
     },
     setMaze(mazeData: firebaseMaze, mazeId: string) {
       this.playableMaze = mazeData;
-      this.tempRow = this.playableMaze.height - 1;
       this.startPostion = this.playableMaze.startPosition;
       this.sessionId = mazeId;
     },

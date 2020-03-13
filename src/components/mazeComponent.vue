@@ -17,9 +17,9 @@
               @keyup.left="movePlayer(myPlayerId, -1 ,0)"
               @keyup.right="movePlayer(myPlayerId, 1 ,0)"
               v-if="showPlayer(showCorrectPoint(row, col), playableMaze.players)"
-              v-focus
-              class="form-control m-0"
+              class="form-control m-1"
               v-model="playerName"
+              v-focus
             />
           </div>
         </div>
@@ -30,8 +30,8 @@
 <script lang="ts">
 import Vue from "vue";
 import store from "@/store/store.ts";
-import { firebaseMaze } from "../classes/dbMazeClass";
-import { Player } from "../classes/playerClass";
+import { firebaseMaze } from "../classes/DBMaze";
+import { Player } from "../classes/Player";
 import { playerMove } from "../storeModules/fbPlayer";
 import moment from "moment";
 Vue.directive("focus", {

@@ -1,24 +1,25 @@
-import moment, { Moment } from "moment";
+import moment from "moment";
+// AccountId is based on the authentication, docId is the randomly generated id for the collection
 export class Player {
   currentPosition: string;
-  playerId: string;
-  currentlyPlaying: boolean;
+  accountId: string;
+  documentId: string;
   lastMoveTime: number;
   constructor(
     startPosition: string,
-    playerId?: string,
-    playing?: boolean,
-    lastPlayerMove?: number
+    documentId?: string,
+    lastPlayerMove?: number,
+    accountId?: string
   ) {
     this.currentPosition = startPosition;
-    this.playerId = "";
-    this.currentlyPlaying = false;
-    this.lastMoveTime = moment().unix(); 
-    if (playerId != undefined) {
-      this.playerId = playerId;
+    this.accountId = "";
+    this.documentId = "";
+    if (documentId != undefined) {
+      this.documentId = documentId;
     }
-    if (playing != undefined) {
-      this.currentlyPlaying = true;
+    this.lastMoveTime = moment().unix();
+    if (accountId != undefined) {
+      this.accountId = accountId;
     }
     if (lastPlayerMove != undefined) {
       this.lastMoveTime = lastPlayerMove;
@@ -33,16 +34,12 @@ export class Player {
     return this.lastMoveTime;
   }
 
-  public getIfUsing() {
-    return this.currentlyPlaying;
+  public getAccountId() {
+    return this.accountId;
   }
 
-  public getPLayerId() {
-    return this.playerId;
-  }
-
-  public updateCurrenltyUsing(using: boolean) {
-    this.currentlyPlaying = using;
+  public getDocumentId() {
+    return this.documentId;
   }
 
   public updatePosition(newX: number, newY: number) {
@@ -51,7 +48,7 @@ export class Player {
     this.currentPosition = `${updatedX},${updatedY}`;
   }
 
-  public uppdatePLayerId(newPlayerId: string) {
-    this.playerId = newPlayerId;
+  public uppdatePLayerId(newAccountId: string) {
+    this.accountId = newAccountId;
   }
 }

@@ -1,6 +1,5 @@
 import { Maze, mazeData } from "./BaseMaze";
 import { Player } from "./Player";
-import moment, { Moment } from "moment";
 export class firebaseMaze extends Maze {
   players: Array<Player>;
   mazeId: string;
@@ -14,39 +13,34 @@ export class firebaseMaze extends Maze {
     this.mazeId = mazeId;
   }
 
-  // Checks the currentlyPLaying field and the last playerMoveTime field.
-  // ? If I just use player last player move I wont need if playing field ?
-  // TODO: figure out why the time difference is so big
-  public returnUnusedPlayerId(): string {
-    let playerId = "";
+  public checkIfPlayerInGame(playerUid: string): boolean {
+    let inGame: boolean = false;
     this.players.forEach(player => {
-      let nowInSeconds: number = moment().unix();
-      let playerTimeInSeconds: number = player.getLastMoveTimeSeconds();
-      let differenceInSeconds: number = nowInSeconds - playerTimeInSeconds;
-      console.log("Difference in seconds since last move", differenceInSeconds);
-      if (player.getIfUsing() === false || differenceInSeconds > 100) {
-        playerId = player.getPLayerId();
+      if (player.getAccountId() == playerUid) {
+        inGame = true;
       }
     });
-    return playerId;
+    return inGame;
+  }
+
+  public getDocIdOnAccountId(accountId: string): string | undefined {
+    let documentId: string | undefined = undefined;
+    this.players.forEach(player => {
+      if (player.getAccountId() == accountId) {
+        documentId = player.getDocumentId();
+      }
+    });
+    return documentId;
   }
 
   public addPlayer(player: Player) {
     this.players.push(player);
   }
 
-  public changePlayerId(oldPlayerId: string, newPLayerId: string) {
-    this.players.forEach(player => {
-      if (player.playerId == oldPlayerId) {
-        player.uppdatePLayerId(newPLayerId);
-      }
-    });
-  }
-
-  public movePLayer(playerId: string, x: number, y: number): string {
+  public movePLayer(documentId: string, x: number, y: number): string {
     let newCurrentPosition: string = "";
     this.players.forEach(player => {
-      if (player.playerId == playerId) {
+      if (player.documentId == documentId) {
         player.updatePosition(x, y);
         newCurrentPosition = player.getCurrentPosition();
       }
@@ -54,7 +48,7 @@ export class firebaseMaze extends Maze {
     return newCurrentPosition;
   }
 
-  public checkPlayerMove(playerId: string, x: number, y: number): boolean {
+  public checkPlayerMove(documentId: string, x: number, y: number): boolean {
     let playerCanMove: boolean = false;
     let direction: string = "";
     let playerPosition: string;
@@ -69,7 +63,7 @@ export class firebaseMaze extends Maze {
     }
     if (direction != "") {
       this.players.forEach(player => {
-        if (player.playerId == playerId) {
+        if (player.documentId == documentId) {
           playerPosition = player.getCurrentPosition();
         }
       });

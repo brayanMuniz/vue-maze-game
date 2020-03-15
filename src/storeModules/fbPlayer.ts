@@ -3,28 +3,8 @@ import { GetterTree } from "vuex";
 import { MutationTree } from "vuex";
 import { firebaseData, dbSchema } from "@/firebaseConfig.ts";
 import { Player } from "@/classes/Player";
+import { playerConverter } from "@/converters";
 // Todo: change to shcema
-
-let playerConverter = {
-  toFireStore: function(player: Player) {
-    return {
-      currentPosition: player.currentPosition,
-      playerId: player.playerId,
-      currentlyPlaying: player.getIfUsing(),
-      lastPlayerMove: player.getLastMoveTimeSeconds()
-    };
-  },
-  // this will be used later to join sessions
-  fromFireStore: function(firebasePlayerData: playerFireStoreData) {
-    console.log("Called", firebasePlayerData);
-    return new Player(
-      firebasePlayerData.currentPosition,
-      firebasePlayerData.playerId,
-      firebasePlayerData.currentlyPlaying,
-      firebasePlayerData.lastMoveTime
-    );
-  }
-};
 
 const state: playerState = {
   currentPlayers: Array<Player>()
@@ -46,7 +26,7 @@ const actions: ActionTree<any, any> = {
       .collection(dbSchema.gameSessions)
       .doc(payload.gameId)
       .collection(dbSchema.players);
-
+    console.log(payload);
     return await mazePlayerSubCollection.add(
       playerConverter.toFireStore(payload.player)
     );
@@ -58,6 +38,13 @@ const actions: ActionTree<any, any> = {
       .doc(gameId)
       .collection(dbSchema.players)
       .get();
+  },
+  async subscribeToPlayerMoves({ commit }, payload: any) {
+    return firebaseData
+      .firestore()
+      .collection(dbSchema.gameSessions)
+      .doc(payload.gameId)
+      .collection(dbSchema.players)
   },
   async getPlayerDataOnce({ commit }, gameId: string) {
     let allPlayers: Array<Player> = [];
@@ -89,7 +76,7 @@ const actions: ActionTree<any, any> = {
       .collection(dbSchema.gameSessions)
       .doc(payload.gameID)
       .collection(dbSchema.players)
-      .doc(payload.playerId);
+      .doc(payload.documentId);
 
     return await playerDoc.update({
       currentPosition: payload.newPlayerPostion
@@ -104,7 +91,6 @@ const actions: ActionTree<any, any> = {
       .collection(dbSchema.players)
       .doc(payload.playerId);
     return playerDoc.update({
-      currentlyPlaying: payload.playingValue,
       lastMoveTime: payload.lastMoveTime
     });
   },
@@ -147,8 +133,8 @@ export interface playerFireStoreData {
 }
 
 export interface playerSnapshot {
-  data: playerSnapShotDataFunction;
   id: string;
+  data: playerSnapShotDataFunction;
 }
 
 interface playerSnapShotDataFunction {
@@ -163,7 +149,7 @@ export interface playerGameSession {
   player: Player;
 }
 export interface playerMove {
-  playerId: string;
+  documentId: string;
   newPlayerPostion: string;
   gameID: string;
 }

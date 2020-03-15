@@ -10,12 +10,14 @@
         <div class="p-3">
           <!-- Uncomment next line to show points -->
           {{showCorrectPoint(row, col)}}
+          <!-- Could make a new component called myPlayer to only focus on that player when it renders -->
+          <!-- Todo: add a green border around input if player is your player -->
           <div class="input-group input-group-sm">
             <input
-              @keyup.up="movePlayer(myPlayerId, 0 ,1)"
-              @keyup.down="movePlayer(myPlayerId, 0 ,-1)"
-              @keyup.left="movePlayer(myPlayerId, -1 ,0)"
-              @keyup.right="movePlayer(myPlayerId, 1 ,0)"
+              @keyup.up="userMove(myDocumentId, 0 ,1)"
+              @keyup.down="userMove(myDocumentId, 0 ,-1)"
+              @keyup.left="userMove(myDocumentId, -1 ,0)"
+              @keyup.right="userMove(myDocumentId, 1 ,0)"
               v-if="showPlayer(showCorrectPoint(row, col), playableMaze.players)"
               class="form-control m-1"
               v-model="playerName"
@@ -39,12 +41,14 @@ Vue.directive("focus", {
     el.focus();
   }
 });
+// Todo: problem does not update automotically. Can detect changes, but does not show them
+
 export default Vue.extend({
   name: "mazeComponent",
-  // Todo: add a local maze prop
   props: {
     playableMaze: firebaseMaze,
-    myPlayerId: String
+    myAccountId: String,
+    myDocumentId: String
   },
   data() {
     return {
@@ -78,8 +82,46 @@ export default Vue.extend({
       };
       return store.dispatch("updatePlayerLastMoveTime", payload);
     },
-    addPLayerToMaze(player: Player) {
-      this.playableMaze.addPlayer(player);
+    async userMove(documentId: string, x: number, y: number) {
+      if (this.playableMaze.checkPlayerMove(documentId, x, y)) {
+        let newPosition: string = this.playableMaze.movePLayer(
+          documentId,
+          x,
+          y
+        );
+        let playerMove: playerMove = {
+          documentId,
+          newPlayerPostion: newPosition,
+          gameID: this.gameId
+        };
+        this.playerMoveCount++;
+        this.playerMoveTimeCount++;
+        if (this.playerMoveTimeCount == this.playerMoveTimeCounterLimit) {
+          await this.lastMoveTimeUpdate(documentId)
+            .then(res => {
+              this.playerMoveTimeCount = 0;
+              console.log("Time Move Update DB");
+            })
+            .catch(err => {
+              console.error(err);
+            });
+        }
+        if (this.playerMoveCount == this.playerCountLimit) {
+          await this.movePlayerDB(playerMove)
+            .then(res => {
+              this.playerMoveCount = 0;
+              console.log("Move Update DB");
+            })
+            .catch(err => {
+              console.error(err);
+              alert("stop");
+            });
+        }
+      }
+    },
+    generatePlayer(startPosition: string, id: string) {
+      let newPlayer: Player = new Player(startPosition, id);
+      return newPlayer;
     },
     generateCellClasses(x: number, y: number) {
       let correctPoint: string = this.showCorrectPoint(x, y);
@@ -100,50 +142,15 @@ export default Vue.extend({
     showCorrectPoint(row: number, col: number): string {
       return `${col - 1},${Math.abs(row - 1 - this.tempRow)}`;
     },
-    showPlayer(correctPoint: string, listOfPLayers: Array<Player>): boolean {
+    showPlayer(formatedpoint: string, listOfPLayers: Array<Player>): boolean {
       let playerInPoint: boolean = false;
       listOfPLayers.forEach(player => {
-        if (player.getCurrentPosition() == correctPoint) {
+        if (player.getCurrentPosition() === formatedpoint) {
+          console.log(player);
           playerInPoint = true;
         }
       });
       return playerInPoint;
-    },
-    generatePlayer(startPosition: string, id: string) {
-      let newPlayer: Player = new Player(startPosition, id);
-      return newPlayer;
-    },
-    async movePlayer(playerId: string, x: number, y: number) {
-      if (this.playableMaze.checkPlayerMove(playerId, x, y)) {
-        let newPosition: string = this.playableMaze.movePLayer(playerId, x, y);
-        let playerMove: playerMove = {
-          playerId,
-          newPlayerPostion: newPosition,
-          gameID: this.gameId
-        };
-        this.playerMoveCount++;
-        this.playerMoveTimeCount++;
-        if (this.playerMoveTimeCount == this.playerMoveTimeCounterLimit) {
-          await this.lastMoveTimeUpdate(playerId)
-            .then(res => {
-              this.playerMoveTimeCount = 0;
-              console.log("Time Move Update DB");
-            })
-            .catch(err => {
-              console.error(err);
-            });
-        }
-        if (this.playerMoveCount == this.playerCountLimit) {
-          await this.movePlayerDB(playerMove)
-            .then(res => {
-              this.playerMoveCount = 0;
-              console.log("Move Update DB");
-            })
-            .catch(err => {
-              alert("stop");
-            });
-        }
-      }
     }
   }
 });

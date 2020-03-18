@@ -20,8 +20,9 @@
               @keyup.right="userMove(myDocumentId, 1 ,0)"
               v-if="showPlayer(showCorrectPoint(row, col), playableMaze.players)"
               class="form-control m-1"
+              :class="generatePlayerClasses(row, col)"
               v-model="playerName"
-              v-focus
+              v-focus="showCorrectPoint(row,col)"
             />
           </div>
         </div>
@@ -36,15 +37,36 @@ import { firebaseMaze } from "../classes/DBMaze";
 import { Player } from "../classes/Player";
 import { playerMove } from "../storeModules/fbPlayer";
 import moment from "moment";
-Vue.directive("focus", {
-  inserted: function(el) {
-    el.focus();
-  }
-});
-// Todo: problem does not update automotically. Can detect changes, but does not show them
-
+// let vm = this.globalThis;
+// Vue.directive("focus", {
+//   inserted: (el, binding, vnode) => {
+//     if (binding.value === this.playable)
+//       if (vnode.context) {
+//         console.log(vnode.context.$props.playableMaze.players);
+//       }
+//     el.focus();
+//   }
+// });
+// ! Leaves behind a trail of the old input player
 export default Vue.extend({
   name: "mazeComponent",
+  directives: {
+    focus: {
+      // "this" does not work here so use vnode
+      inserted: (el, binding, vnode) => {
+        if (vnode.context) {
+          if (
+            binding.value ===
+            vnode.context.$props.playableMaze.getPLayerPosition(
+              vnode.context.$props.myDocumentId
+            )
+          ) {
+            el.focus();
+          }
+        }
+      }
+    }
+  },
   props: {
     playableMaze: firebaseMaze,
     myAccountId: String,
@@ -63,12 +85,12 @@ export default Vue.extend({
     };
   },
   mounted() {
-    this.dataReady = true;
     this.tempRow = this.playableMaze.height - 1;
     this.gameId = this.playableMaze.mazeId; // update propety to gameId
     this.playerMoveTimeCounterLimit = Math.floor(
       (this.playableMaze.height * this.playableMaze.width) / 10
     );
+    this.dataReady = true;
   },
   methods: {
     async movePlayerDB(newMove: playerMove) {
@@ -139,6 +161,14 @@ export default Vue.extend({
       }
       return allClasses;
     },
+    generatePlayerClasses(x: number, y: number) {
+      let formatedPoint: string = this.showCorrectPoint(x, y);
+      let myPoint = this.playableMaze.getPLayerPosition(this.myDocumentId);
+      let playerClass: any = {
+        "bg-success": formatedPoint === myPoint
+      };
+      return playerClass;
+    },
     showCorrectPoint(row: number, col: number): string {
       return `${col - 1},${Math.abs(row - 1 - this.tempRow)}`;
     },
@@ -146,11 +176,20 @@ export default Vue.extend({
       let playerInPoint: boolean = false;
       listOfPLayers.forEach(player => {
         if (player.getCurrentPosition() === formatedpoint) {
-          console.log(player);
           playerInPoint = true;
         }
       });
       return playerInPoint;
+    }
+  },
+  watch: {
+    playableMaze: {
+      immediate: true, // the callback will be called immediately after the start of the observation
+      deep: true,
+      handler(newVal, oldVal) {
+        console.log("change in the maze");
+        // console.log(newVal, oldVal);
+      }
     }
   }
 });

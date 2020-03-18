@@ -8,8 +8,9 @@
         <input type="text" placeholder="plyerName" v-model="playerName" class="form-control" />
       </div>
       <button @click="getMazeData(sessionId)">Join Game</button>
-      <button @click="addPlayerToDB( playableMaze.players[0], sessionId)">addPlayer</button>
-      <button @click="updatePlayerName(sessionId, myAccountId, playerName)">updatePlayerName</button>
+      <!-- Abstract this  -->
+      <!-- <button @click="addPlayerToDB( playableMaze.players[0], sessionId)">addPlayer</button>
+      <button @click="updatePlayerName(sessionId, myAccountId, playerName)">updatePlayerName</button>-->
       <button v-if="myAccountId == ''" @click="createAnonymousAccount()">Make Account</button>
     </div>
     <div class="container-fluid mt-2 mx-2" v-if="dataReady">
@@ -136,7 +137,7 @@ export default Vue.extend({
             snapshot.docChanges().forEach((change: any) => {
               this.dataReady = false;
               if (change.type === "added") {
-                console.log("New Player: ", change.doc.data());
+                console.log("New Player: ", change.doc.id);
                 let playerData: Player = change.doc.data();
                 let newPlayer: Player = new Player(
                   playerData.currentPosition,
@@ -147,7 +148,7 @@ export default Vue.extend({
                 this.playableMaze.addPlayer(newPlayer);
               }
               if (change.type === "modified") {
-                console.log("Modified PLayer: ", change.doc.data());
+                console.log("Modified PLayer: ", change.doc.id);
                 let x: number = change.doc.data().currentPosition.split(",")[0];
                 let y: number = change.doc.data().currentPosition.split(",")[1];
                 this.playableMaze.movePLayer(
@@ -157,7 +158,7 @@ export default Vue.extend({
                 );
               }
               if (change.type === "removed") {
-                console.log("Removed PLayer: ", change.doc.data());
+                console.log("Removed PLayer: ", change.doc.id);
               }
               this.dataReady = true;
             });
@@ -253,7 +254,7 @@ export default Vue.extend({
   }
 });
 </script>
-
+  
 <style lang="scss">
 @import "~bootstrap/scss/bootstrap";
 .startPoint {

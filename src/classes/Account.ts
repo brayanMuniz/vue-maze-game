@@ -2,7 +2,6 @@
 // Only uses anonymous auth as to not have to deal with email verification
 // Using auth uid to not duplicate player in a maze session
 import { firebaseData } from "@/firebaseConfig";
-console.log("Made an account");
 export class Account {
   uid: string;
   constructor(authUid?: string) {

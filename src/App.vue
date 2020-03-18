@@ -109,8 +109,10 @@ export default Vue.extend({
                   x,
                   y
                 );
+                console.log(this.playableMaze.players);
               }
               if (change.type === "removed") {
+                this.playableMaze.removePlayer(change.doc.id);
                 console.log("Removed PLayer: ", change.doc.id);
               }
               // Todo: make own function

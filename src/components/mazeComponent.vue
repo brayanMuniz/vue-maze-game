@@ -10,8 +10,6 @@
         <div class="p-3">
           <!-- Uncomment next line to show points -->
           {{showCorrectPoint(row, col)}}
-          <!-- Could make a new component called myPlayer to only focus on that player when it renders -->
-          <!-- Todo: add a green border around input if player is your player -->
           <div class="input-group input-group-sm">
             <input
               @keyup.up="userMove(myDocumentId, 0 ,1)"
@@ -37,17 +35,6 @@ import { firebaseMaze } from "../classes/DBMaze";
 import { Player } from "../classes/Player";
 import { playerMove } from "../storeModules/fbPlayer";
 import moment from "moment";
-// let vm = this.globalThis;
-// Vue.directive("focus", {
-//   inserted: (el, binding, vnode) => {
-//     if (binding.value === this.playable)
-//       if (vnode.context) {
-//         console.log(vnode.context.$props.playableMaze.players);
-//       }
-//     el.focus();
-//   }
-// });
-// ! Leaves behind a trail of the old input player
 export default Vue.extend({
   name: "mazeComponent",
   directives: {
@@ -91,6 +78,20 @@ export default Vue.extend({
       (this.playableMaze.height * this.playableMaze.width) / 10
     );
     this.dataReady = true;
+  },
+  watch: {
+    currentPlayers: {
+      immediate: true,
+      deep: true,
+      handler(newVal, oldVal) {
+        console.log("Players Changed!", newVal, oldVal);
+      }
+    }
+  },
+  computed: {
+    currentPlayers() {
+      return this.playableMaze.players;
+    }
   },
   methods: {
     async movePlayerDB(newMove: playerMove) {
@@ -180,16 +181,6 @@ export default Vue.extend({
         }
       });
       return playerInPoint;
-    }
-  },
-  watch: {
-    playableMaze: {
-      immediate: true, // the callback will be called immediately after the start of the observation
-      deep: true,
-      handler(newVal, oldVal) {
-        console.log("change in the maze");
-        // console.log(newVal, oldVal);
-      }
     }
   }
 });

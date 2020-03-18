@@ -40,6 +40,18 @@ export class firebaseMaze extends Maze {
     this.players.push(player);
   }
 
+  public removePlayer(playerDoc: String) {
+    let idx: number | undefined = undefined;
+    this.players.forEach((player, index) => {
+      if (player.getDocumentId() === playerDoc) {
+        idx = index;
+      }
+    });
+    if (idx != undefined) {
+      this.players.splice(idx, 1);
+    }
+  }
+
   public getPLayerPosition(docId: string): string {
     let currentPosition: string = "";
     this.players.forEach(player => {
@@ -54,7 +66,7 @@ export class firebaseMaze extends Maze {
   public movePLayer(documentId: string, x: number, y: number): string {
     let newCurrentPosition: string = "";
     this.players.forEach(player => {
-      if (player.documentId == documentId) {
+      if (player.documentId === documentId) {
         player.updatePosition(x, y);
         newCurrentPosition = player.getCurrentPosition();
       }

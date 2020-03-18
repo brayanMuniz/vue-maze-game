@@ -62,7 +62,7 @@ export default Vue.extend({
         let account: Account = new Account(user.uid);
         this.myAccount = account;
         this.myAccountId = this.myAccount.returnUid();
-        console.log(this.myAccountId);
+        console.log("Account ID is", this.myAccountId);
         let testSessionId: string = "241m776ej6r17eunsAq9";
         let allPlayers: Array<Player> = [];
 
@@ -83,65 +83,18 @@ export default Vue.extend({
             console.error(err);
           });
 
-        await this.getPlayersFromSession(testSessionId)
-          .then(playerSnapshot => {
-            console.log(playerSnapshot);
-            // For security purposes the user should never be able to get the UID of every account,
-            // but im lazy, so this is good enough
-            playerSnapshot.forEach((playerDoc: playerSnapshot) => {
-              let newPlayer: Player = new Player(
-                playerDoc.data().currentPosition,
-                playerDoc.id,
-                playerDoc.data().lastMoveTime,
-                playerDoc.data().accountId
-              );
-              allPlayers.push(newPlayer);
-            });
-            this.playableMaze.replacePlayers(allPlayers);
-            console.log(this.playableMaze.players);
-          })
-          .catch(err => {
-            console.error(err);
-          });
-
-        if (this.playableMaze.checkIfPlayerInGame(this.myAccountId)) {
-          let myDocId = this.playableMaze.getDocIdOnAccountId(this.myAccountId);
-          if (myDocId != undefined) {
-            this.myDocumentId = myDocId;
-            gameReady.playerDataReady = true;
-            console.log("Already in the game");
-          } else {
-            gameReady.playerDataReady = false;
-            console.log("Problem getting your document Id");
-          }
-        } else {
-          // Dont need last argument but might be usefult later
-          let newPLayer: Player = new Player(
-            this.startPostion,
-            undefined,
-            moment().unix(),
-            this.myAccountId
-          );
-          this.addPlayerToDB(newPLayer, testSessionId).then(res => {
-            gameReady.playerDataReady = true;
-            console.log("You are addded to maze session");
-          });
-        }
-        if (gameReady.mazeReady && gameReady.playerDataReady) {
-          this.dataReady = true;
-        }
-        let snapShotListener = this.listenPlayerMoves(testSessionId);
-        snapShotListener.then(snapshotResult => {
-          snapshotResult.onSnapshot((snapshot: any) => {
+        this.listenPlayerMoves(testSessionId).then(async snapshotResult => {
+          await snapshotResult.onSnapshot((snapshot: any) => {
             // Add player change doc type interface
             snapshot.docChanges().forEach((change: any) => {
               this.dataReady = false;
+              // Todo: next 3 if statements a function
               if (change.type === "added") {
                 console.log("New Player: ", change.doc.id);
                 let playerData: Player = change.doc.data();
                 let newPlayer: Player = new Player(
                   playerData.currentPosition,
-                  playerData.documentId,
+                  change.doc.id,
                   playerData.lastMoveTime,
                   playerData.accountId
                 );
@@ -160,11 +113,39 @@ export default Vue.extend({
               if (change.type === "removed") {
                 console.log("Removed PLayer: ", change.doc.id);
               }
-              this.dataReady = true;
+              // Todo: make own function
+              if (this.playableMaze.checkIfPlayerInGame(this.myAccountId)) {
+                let myDocId = this.playableMaze.getDocIdOnAccountId(
+                  this.myAccountId
+                );
+                if (myDocId != undefined) {
+                  this.myDocumentId = myDocId;
+                  console.log("Your doc Id is ", this.myDocumentId);
+                  gameReady.playerDataReady = true;
+                  console.log("Already in the game");
+                } else {
+                  gameReady.playerDataReady = false;
+                  console.log("Problem getting your document Id");
+                }
+              } else {
+                // Dont need last argument but might be usefult later
+                let newPLayer: Player = new Player(
+                  this.startPostion,
+                  undefined,
+                  moment().unix(),
+                  this.myAccountId
+                );
+                this.addPlayerToDB(newPLayer, testSessionId).then(res => {
+                  gameReady.playerDataReady = true;
+                  console.log("You are addded to maze session");
+                });
+              }
+              if (gameReady.mazeReady && gameReady.playerDataReady) {
+                this.dataReady = true;
+              }
             });
           });
         });
-        // Todo: listen to playerMoves
       } else {
         console.log("Signed Out");
       }

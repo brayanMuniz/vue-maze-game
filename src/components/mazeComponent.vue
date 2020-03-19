@@ -79,20 +79,6 @@ export default Vue.extend({
     );
     this.dataReady = true;
   },
-  watch: {
-    currentPlayers: {
-      immediate: true,
-      deep: true,
-      handler(newVal, oldVal) {
-        console.log("Players Changed!", newVal, oldVal);
-      }
-    }
-  },
-  computed: {
-    currentPlayers() {
-      return this.playableMaze.players;
-    }
-  },
   methods: {
     async movePlayerDB(newMove: playerMove) {
       return store.dispatch("sendPlayerMove", newMove);

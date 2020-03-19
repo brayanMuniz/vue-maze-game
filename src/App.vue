@@ -9,8 +9,7 @@
       </div>
       <button @click="getMazeData(sessionId)">Join Game</button>
       <!-- Abstract this  -->
-      <!-- <button @click="addPlayerToDB( playableMaze.players[0], sessionId)">addPlayer</button>
-      <button @click="updatePlayerName(sessionId, myAccountId, playerName)">updatePlayerName</button>-->
+      <!-- <button @click="updatePlayerName(sessionId, myAccountId, playerName)">updatePlayerName</button>-->
       <button v-if="myAccountId == ''" @click="createAnonymousAccount()">Make Account</button>
     </div>
     <div class="container-fluid mt-2 mx-2" v-if="dataReady">
@@ -153,7 +152,6 @@ export default Vue.extend({
           let y: number = changeDoc.doc.data().currentPosition.split(",")[1];
           console.log(x, y);
           this.playableMaze.replacePlayerPosition(changeDoc.doc.id, x, y);
-          
         }
       }
       if (changeType === "removed") {
@@ -186,7 +184,7 @@ export default Vue.extend({
         .then(async mazeDataDoc => {
           this.sessionId = mazeDataDoc.id;
           let myUid = this.myAccount.returnUid();
-          let newPlayer: Player = this.generatePlayer(this.startPostion, myUid);
+          let newPlayer: Player = new Player(this.startPostion, myUid);
           this.playableMaze.addPlayer(newPlayer);
           await this.addPlayerToDB(newPlayer, this.sessionId).then(
             playerDoc => {
@@ -202,9 +200,6 @@ export default Vue.extend({
     },
     async getMazeData(sessionId: string) {
       return await store.dispatch("getMazeDataOnce", sessionId);
-    },
-    async getPlayersFromSession(sessionId: string) {
-      return await store.dispatch("getPlayerData", sessionId);
     },
     async addPlayerToDB(player: Player, gameId: string) {
       let data: playerGameSession = {
@@ -233,10 +228,6 @@ export default Vue.extend({
       this.playableMaze = mazeData;
       this.startPostion = this.playableMaze.startPosition;
       this.sessionId = mazeId;
-    },
-    generatePlayer(startPosition: string, id: string) {
-      let newPlayer: Player = new Player(startPosition, id);
-      return newPlayer;
     }
   },
   components: {

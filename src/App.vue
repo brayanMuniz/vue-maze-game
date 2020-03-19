@@ -89,7 +89,7 @@ export default Vue.extend({
             await snapshot.docChanges().forEach(async (change: any) => {
               this.dataReady = false;
               this.playerHandler(change.type, change);
-
+              // Make sure all the players are loaded in before checking if user in the game
               if (this.playableMaze.players.length === snapshot.size) {
                 if (this.playableMaze.checkIfPlayerInGame(this.myAccountId)) {
                   let myDocId = this.playableMaze.getDocIdOnAccountId(
@@ -147,11 +147,14 @@ export default Vue.extend({
         this.playableMaze.addPlayer(newPlayer);
       }
       if (changeType === "modified") {
-        console.log("Modified PLayer: ", changeDoc.doc.id);
-        let x: number = changeDoc.doc.data().currentPosition.split(",")[0];
-        let y: number = changeDoc.doc.data().currentPosition.split(",")[1];
-        this.playableMaze.movePLayer(changeDoc.doc.data().documentId, x, y);
-        console.log(this.playableMaze.players);
+        if (changeDoc.doc.id != this.myDocumentId) {
+          console.log("Modified PLayer: ", changeDoc.doc.id);
+          let x: number = changeDoc.doc.data().currentPosition.split(",")[0];
+          let y: number = changeDoc.doc.data().currentPosition.split(",")[1];
+          console.log(x, y);
+          this.playableMaze.replacePlayerPosition(changeDoc.doc.id, x, y);
+          
+        }
       }
       if (changeType === "removed") {
         this.playableMaze.removePlayer(changeDoc.doc.id);

@@ -119,6 +119,8 @@ export default Vue.extend({
         };
         this.playerMoveCount++;
         this.playerMoveTimeCount++;
+
+        // Updates the last time player moved in DB
         if (this.playerMoveTimeCount == this.playerMoveTimeCounterLimit) {
           await this.lastMoveTimeUpdate(documentId)
             .then(res => {
@@ -129,6 +131,7 @@ export default Vue.extend({
               console.error(err);
             });
         }
+        // Updates player move in DB
         if (this.playerMoveCount == this.playerCountLimit) {
           await this.movePlayerDB(playerMove)
             .then(res => {

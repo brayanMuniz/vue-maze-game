@@ -60,6 +60,14 @@ export class firebaseMaze extends Maze {
     return currentPosition;
   }
 
+  public replacePlayerPosition(documentId: string, x: number, y: number) {
+    this.players.forEach(player => {
+      if (player.documentId === documentId) {
+        player.replacePostion(x, y);
+      }
+    });
+  }
+
   public movePLayer(documentId: string, x: number, y: number): string {
     let newCurrentPosition: string = "";
     this.players.forEach(player => {

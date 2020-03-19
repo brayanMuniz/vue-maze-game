@@ -42,6 +42,10 @@ export class Player {
     return this.documentId;
   }
 
+  public replacePostion(x: number, y: number) {
+    this.currentPosition = `${x},${y}`;
+  }
+
   public updatePosition(newX: number, newY: number) {
     let updatedX: number = Number(this.currentPosition.split(",")[0]) + newX;
     let updatedY: number = Number(this.currentPosition.split(",")[1]) + newY;

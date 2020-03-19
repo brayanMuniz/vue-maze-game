@@ -40,11 +40,11 @@ const actions: ActionTree<any, any> = {
       .get();
   },
   async subscribeToPlayerMoves({ commit }, payload: any) {
-    return firebaseData
+    return await firebaseData
       .firestore()
       .collection(dbSchema.gameSessions)
       .doc(payload.gameId)
-      .collection(dbSchema.players)
+      .collection(dbSchema.players);
   },
   async getPlayerDataOnce({ commit }, gameId: string) {
     let allPlayers: Array<Player> = [];

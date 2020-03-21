@@ -100,7 +100,7 @@ const actions: ActionTree<any, any> = {
       .collection(dbSchema.gameSessions)
       .doc(payload.gameId)
       .collection(dbSchema.players)
-      .doc(payload.playerId);
+      .doc(payload.playerDoc);
     return playerDoc.update({
       playerName: payload.newPlayerName
     });

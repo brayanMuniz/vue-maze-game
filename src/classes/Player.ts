@@ -52,6 +52,10 @@ export class Player {
     this.currentPosition = `${updatedX},${updatedY}`;
   }
 
+  public updateDocId(newDocId: string) {
+    this.documentId = newDocId;
+  }
+
   public uppdatePLayerId(newAccountId: string) {
     this.accountId = newAccountId;
   }

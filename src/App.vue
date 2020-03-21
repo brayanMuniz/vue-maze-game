@@ -1,16 +1,22 @@
 <template>
   <div id="app">
-    <div class="container">
-      <button @click="generateMazeSession()">startSession</button>
+    <div class="container-fluid">
       <!-- AntWnn37HeSw4xRPy2s3, 241m776ej6r17eunsAq9 -->
       <div class="input-group input-group-sm">
+        <!-- <button
+          @click="updatePlayerName(sessionId, myDocumentId, playerName)"
+          class="btn btn-primary btn-sm"
+        >Update Name</button>
+        <input type="text" placeholder="Player Name" v-model="playerName" class="form-control" />-->
+        <button @click="joinMazeSession(sessionId)" class="ml-1 btn btn-primary btn-sm">Join Game</button>
         <input type="text" placeholder="sessionId" v-model.trim="sessionId" class="form-control" />
-        <input type="text" placeholder="plyerName" v-model="playerName" class="form-control" />
+        <button @click="generateMazeSession()" class="ml-1 btn btn-primary btn-sm">New Game</button>
       </div>
-      <button @click="getMazeData(sessionId)">Join Game</button>
-      <!-- Abstract this  -->
-      <!-- <button @click="updatePlayerName(sessionId, myAccountId, playerName)">updatePlayerName</button>-->
-      <button v-if="myAccountId == ''" @click="createAnonymousAccount()">Make Account</button>
+      <button
+        v-if="myAccountId == ''"
+        @click="createAnonymousAccount()"
+        class="ml-1 btn btn-primary btn-sm"
+      >Make Account</button>
     </div>
     <div class="container-fluid mt-2 mx-2" v-if="dataReady">
       <mazeComponent
@@ -63,70 +69,7 @@ export default Vue.extend({
         this.myAccountId = this.myAccount.returnUid();
         console.log("Account ID is", this.myAccountId);
         let testSessionId: string = "241m776ej6r17eunsAq9";
-        let allPlayers: Array<Player> = [];
-
-        let gameReady = {
-          mazeReady: false,
-          playerDataReady: false,
-          userReady: false,
-          playerMovesReady: true
-        };
-
-        await this.getMazeData(testSessionId)
-          .then((mazeDataResult: firebaseMaze) => {
-            this.setMaze(mazeDataResult, testSessionId); // This should run after all conditions are met
-            gameReady.mazeReady = true;
-          })
-          .catch(err => {
-            gameReady.mazeReady = false;
-            console.error(err);
-          });
-
-        this.listenPlayerMoves(testSessionId).then(async snapshotResult => {
-          await snapshotResult.onSnapshot(async (snapshot: any) => {
-            // Add player change doc type interface
-            await snapshot.docChanges().forEach(async (change: any) => {
-              this.dataReady = false;
-              this.playerHandler(change.type, change);
-              // Make sure all the players are loaded in before checking if user in the game
-              if (this.playableMaze.players.length === snapshot.size) {
-                if (this.playableMaze.checkIfPlayerInGame(this.myAccountId)) {
-                  let myDocId = this.playableMaze.getDocIdOnAccountId(
-                    this.myAccountId
-                  );
-                  if (myDocId != undefined) {
-                    this.myDocumentId = myDocId;
-                    console.log("Your doc Id is ", this.myDocumentId);
-                    gameReady.playerDataReady = true;
-                    console.log("IN THE GAME");
-                  } else {
-                    gameReady.playerDataReady = false;
-                    console.log("Problem getting your document Id");
-                  }
-                } else {
-                  console.log("NOT IN THE GAME");
-                  console.log("Adding new player to the maze");
-                  let newPLayer: Player = new Player(
-                    this.startPostion,
-                    undefined,
-                    moment().unix(),
-                    this.myAccountId
-                  );
-                  await this.addPlayerToDB(newPLayer, testSessionId).then(
-                    res => {
-                      gameReady.playerDataReady = true;
-                      console.log("You are addded to maze session");
-                    }
-                  );
-                }
-              }
-
-              if (gameReady.mazeReady && gameReady.playerDataReady) {
-                this.dataReady = true;
-              }
-            });
-          });
-        });
+        await this.joinMazeSession(testSessionId);
       } else {
         console.log("Signed Out");
       }
@@ -159,6 +102,74 @@ export default Vue.extend({
         console.log("Removed PLayer: ", changeDoc.doc.id);
       }
     },
+    async joinMazeSession(gameId: string) {
+      let gameReady = {
+        mazeReady: false,
+        playerDataReady: false
+      };
+      await this.getMazeData(gameId)
+        .then((mazeDataResult: firebaseMaze) => {
+          console.log("Maze Data Loaded");
+          this.setMaze(mazeDataResult, gameId);
+          gameReady.mazeReady = true;
+        })
+        .catch(err => {
+          gameReady.mazeReady = false;
+          console.error(err);
+        });
+
+      await this.listenPlayerMoves(gameId).then(async snapshotResult => {
+        await snapshotResult.onSnapshot(async (snapshot: any) => {
+          if (snapshot.empty) {
+            console.log("Adding you as first player");
+            await this.addPlayerToDB(
+              this.startPostion,
+              this.myAccountId,
+              gameId
+            ).then(res => {
+              this.myDocumentId = res.id;
+              gameReady.playerDataReady = true;
+              console.log("You are addded to maze session");
+            });
+          }
+
+          await snapshot.docChanges().forEach(async (change: any) => {
+            this.dataReady = false;
+            this.playerHandler(change.type, change);
+            // All players are accounted for
+            if (this.playableMaze.players.length === snapshot.size) {
+              if (this.playableMaze.checkIfPlayerInGame(this.myAccountId)) {
+                let myDocId = this.playableMaze.getDocIdOnAccountId(
+                  this.myAccountId
+                );
+                if (myDocId != undefined) {
+                  this.myDocumentId = myDocId;
+                  gameReady.playerDataReady = true;
+                } else {
+                  gameReady.playerDataReady = false;
+                  console.error("Problem getting your document Id");
+                }
+              } else {
+                console.log("NOT IN THE GAME");
+                await this.addPlayerToDB(
+                  this.startPostion,
+                  this.myAccountId,
+                  gameId
+                ).then(res => {
+                  this.myDocumentId = res.id;
+                  gameReady.playerDataReady = true;
+                  console.log("You are addded to maze session", res);
+                });
+              }
+            }
+
+            if (gameReady.mazeReady && gameReady.playerDataReady) {
+              this.dataReady = true;
+            }
+          });
+        });
+      });
+    },
     async listenPlayerMoves(gameId: string) {
       let payload = {
         gameId
@@ -172,26 +183,17 @@ export default Vue.extend({
         console.log(res);
       });
     },
+    // Todo: fix this, FirebaseError: No document to update: projects/maze-game-data/databases/(default)/
     async generateMazeSession() {
+      this.dataReady = false;
       let players: Array<Player> = [];
       let mazeId: string = "";
       let newMaze = new firebaseMaze(players, mazeId);
       newMaze.generateMaze(1, 11, 11);
-      this.playableMaze = newMaze;
-      this.startPostion = this.playableMaze.startPosition;
       await store
-        .dispatch("makeGameSession", this.playableMaze)
+        .dispatch("makeGameSession", newMaze)
         .then(async mazeDataDoc => {
-          this.sessionId = mazeDataDoc.id;
-          let myUid = this.myAccount.returnUid();
-          let newPlayer: Player = new Player(this.startPostion, myUid);
-          this.playableMaze.addPlayer(newPlayer);
-          await this.addPlayerToDB(newPlayer, this.sessionId).then(
-            playerDoc => {
-              console.log(this.playableMaze);
-              this.dataReady = true;
-            }
-          );
+          this.joinMazeSession(mazeDataDoc.id);
         })
         .catch(err => {
           console.log(err);
@@ -201,7 +203,17 @@ export default Vue.extend({
     async getMazeData(sessionId: string) {
       return await store.dispatch("getMazeDataOnce", sessionId);
     },
-    async addPlayerToDB(player: Player, gameId: string) {
+    async addPlayerToDB(
+      startPosition: string,
+      accountId: string,
+      gameId: string
+    ) {
+      let player: Player = new Player(
+        startPosition,
+        undefined,
+        moment().unix(),
+        accountId
+      );
       let data: playerGameSession = {
         gameId,
         player
@@ -210,16 +222,21 @@ export default Vue.extend({
         console.error(err);
       });
     },
+    // Todo: does not work because fieldName playerName does not exist. Update DB schema for capabilites
     async updatePlayerName(
       gameId: string,
-      playerId: string,
+      playerDoc: string,
       newPLayerName: string
     ) {
-      if (gameId && playerId && newPLayerName) {
-        console.log(gameId, playerId, newPLayerName);
+      console.log(gameId, playerDoc, newPLayerName);
+      if (
+        gameId != undefined &&
+        playerDoc != undefined &&
+        newPLayerName != undefined
+      ) {
         return await store.dispatch("updatePlayerName", {
           gameId,
-          playerId,
+          playerDoc,
           newPLayerName
         });
       }

@@ -109,7 +109,6 @@ export default Vue.extend({
         })
         .catch(err => {
           gameReady.mazeReady = false;
-          console.error(err);
         });
 
       await this.listenPlayerMoves(gameId).then(async snapshotResult => {
@@ -207,7 +206,7 @@ export default Vue.extend({
         player
       };
       return await store.dispatch("addPlayerToSession", data).catch(err => {
-        console.error(err);
+        alert("problem adding you")
       });
     },
     // Todo: does not work because fieldName playerName does not exist. Update DB schema for capabilites

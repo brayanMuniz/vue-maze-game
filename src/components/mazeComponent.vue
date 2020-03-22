@@ -112,9 +112,7 @@ export default Vue.extend({
             .then(res => {
               this.playerMoveTimeCount = 0;
             })
-            .catch(err => {
-              console.error(err);
-            });
+            .catch(err => {});
         }
         // Updates player move in DB
         if (this.playerMoveCount == this.playerCountLimit) {
@@ -123,7 +121,6 @@ export default Vue.extend({
               this.playerMoveCount = 0;
             })
             .catch(err => {
-              console.error(err);
               alert("stop");
             });
         }

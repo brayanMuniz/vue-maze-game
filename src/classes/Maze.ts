@@ -90,7 +90,7 @@ export class Maze {
     if (index > -1) {
       this.unvisitedCells.splice(index, 1);
     } else {
-      console.error("WHT");
+      ("WHT");
     }
   }
 

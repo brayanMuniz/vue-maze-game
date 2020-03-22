@@ -27,7 +27,7 @@ export class Account {
       .auth()
       .signOut()
       .catch(err => {
-        console.error(err);
+        (err);
       });
   }
 

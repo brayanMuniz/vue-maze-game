@@ -19,7 +19,6 @@ export class Account {
       .auth()
       .signInAnonymously()
       .catch(error => {
-        console.log(error);
       });
   }
 

@@ -26,7 +26,6 @@ const actions: ActionTree<any, any> = {
       .collection(dbSchema.gameSessions)
       .doc(payload.gameId)
       .collection(dbSchema.players);
-    console.log(payload);
     return await mazePlayerSubCollection.add(
       playerConverter.toFireStore(payload.player)
     );
@@ -56,7 +55,6 @@ const actions: ActionTree<any, any> = {
       .get()
       .then(querySnapshot => {
         querySnapshot.forEach(function(doc) {
-          console.log(doc.data());
           let newPLayer: Player = new Player(
             doc.data().currentPosition,
             doc.id,
@@ -66,7 +64,6 @@ const actions: ActionTree<any, any> = {
           allPlayers.push(newPLayer);
         });
       });
-    console.log(allPlayers);
     commit("updateCurrentPlayers", allPlayers);
     return allPlayers;
   },

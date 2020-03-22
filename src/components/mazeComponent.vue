@@ -111,7 +111,6 @@ export default Vue.extend({
           await this.lastMoveTimeUpdate(documentId)
             .then(res => {
               this.playerMoveTimeCount = 0;
-              console.log("Time Move Update DB");
             })
             .catch(err => {
               console.error(err);
@@ -122,7 +121,6 @@ export default Vue.extend({
           await this.movePlayerDB(playerMove)
             .then(res => {
               this.playerMoveCount = 0;
-              console.log("Move Update DB");
             })
             .catch(err => {
               console.error(err);

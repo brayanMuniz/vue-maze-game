@@ -67,18 +67,16 @@ export default Vue.extend({
         let account: Account = new Account(user.uid);
         this.myAccount = account;
         this.myAccountId = this.myAccount.returnUid();
-        console.log("Account ID is", this.myAccountId);
         let testSessionId: string = "241m776ej6r17eunsAq9";
         await this.joinMazeSession(testSessionId);
       } else {
-        console.log("Signed Out");
+        alert("Make account to play");
       }
     });
   },
   methods: {
     playerHandler(changeType: string, changeDoc: any) {
       if (changeType === "added") {
-        console.log("New Player: ", changeDoc.doc.id);
         let playerData: Player = changeDoc.doc.data();
         let newPlayer: Player = new Player(
           playerData.currentPosition,
@@ -90,16 +88,13 @@ export default Vue.extend({
       }
       if (changeType === "modified") {
         if (changeDoc.doc.id != this.myDocumentId) {
-          console.log("Modified PLayer: ", changeDoc.doc.id);
           let x: number = changeDoc.doc.data().currentPosition.split(",")[0];
           let y: number = changeDoc.doc.data().currentPosition.split(",")[1];
-          console.log(x, y);
           this.playableMaze.replacePlayerPosition(changeDoc.doc.id, x, y);
         }
       }
       if (changeType === "removed") {
         this.playableMaze.removePlayer(changeDoc.doc.id);
-        console.log("Removed PLayer: ", changeDoc.doc.id);
       }
     },
     async joinMazeSession(gameId: string) {
@@ -109,7 +104,6 @@ export default Vue.extend({
       };
       await this.getMazeData(gameId)
         .then((mazeDataResult: firebaseMaze) => {
-          console.log("Maze Data Loaded");
           this.setMaze(mazeDataResult, gameId);
           gameReady.mazeReady = true;
         })
@@ -121,7 +115,6 @@ export default Vue.extend({
       await this.listenPlayerMoves(gameId).then(async snapshotResult => {
         await snapshotResult.onSnapshot(async (snapshot: any) => {
           if (snapshot.empty) {
-            console.log("Adding you as first player");
             await this.addPlayerToDB(
               this.startPostion,
               this.myAccountId,
@@ -129,7 +122,6 @@ export default Vue.extend({
             ).then(res => {
               this.myDocumentId = res.id;
               gameReady.playerDataReady = true;
-              console.log("You are addded to maze session");
             });
           }
 
@@ -147,10 +139,9 @@ export default Vue.extend({
                   gameReady.playerDataReady = true;
                 } else {
                   gameReady.playerDataReady = false;
-                  console.error("Problem getting your document Id");
+                  alert("Problem getting your data");
                 }
               } else {
-                console.log("NOT IN THE GAME");
                 await this.addPlayerToDB(
                   this.startPostion,
                   this.myAccountId,
@@ -158,7 +149,6 @@ export default Vue.extend({
                 ).then(res => {
                   this.myDocumentId = res.id;
                   gameReady.playerDataReady = true;
-                  console.log("You are addded to maze session", res);
                 });
               }
             }
@@ -180,7 +170,6 @@ export default Vue.extend({
     async createAnonymousAccount() {
       let newAccount: Account = new Account();
       await newAccount.makeAnonymousAccount().then(res => {
-        console.log(res);
       });
     },
     // Todo: fix this, FirebaseError: No document to update: projects/maze-game-data/databases/(default)/
@@ -196,7 +185,6 @@ export default Vue.extend({
           this.joinMazeSession(mazeDataDoc.id);
         })
         .catch(err => {
-          console.log(err);
           alert("help");
         });
     },
@@ -228,7 +216,6 @@ export default Vue.extend({
       playerDoc: string,
       newPLayerName: string
     ) {
-      console.log(gameId, playerDoc, newPLayerName);
       if (
         gameId != undefined &&
         playerDoc != undefined &&

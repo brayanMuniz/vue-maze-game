@@ -38,7 +38,8 @@ export let mazeConverter = {
       height: maze.height
     };
   },
-  fromFireStore: function(firebaseMazeData: mazeData, mazeId: string) {
+  // Todo: update any do DOc type
+  fromFireStore: function(firebaseMazeData: any, mazeId: string) {
     let players: Array<Player> = [];
     return new firebaseMaze(players, mazeId, firebaseMazeData);
   }

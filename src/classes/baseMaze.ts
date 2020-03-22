@@ -70,8 +70,6 @@ export class Maze {
     this.generateSolutions(solutions);
   }
 
-  // public returnFormatedMove(x: )
-
   private generateSolutions(amountOfSolutions: number) {
     let allPoints: Array<string> = Object.keys(this.mazeMap);
     for (let i = 0; i < amountOfSolutions; i++) {

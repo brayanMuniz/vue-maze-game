@@ -81,8 +81,8 @@ export class firebaseMaze extends Maze {
 
   public checkPlayerMove(documentId: string, x: number, y: number): boolean {
     let playerCanMove: boolean = false;
-    let direction: string = "";
-    let playerPosition: string;
+    let direction: "N" | "S" | "E" | "W" | undefined;
+    let playerPosition: string = "";
     if (x == 1 && y == 0) {
       direction = "E";
     } else if (x == -1 && y == 0) {
@@ -92,12 +92,13 @@ export class firebaseMaze extends Maze {
     } else if (y == -1 && x == 0) {
       direction = "S";
     }
-    if (direction != "") {
+    if (direction != undefined) {
       this.players.forEach(player => {
         if (player.documentId == documentId) {
           playerPosition = player.getCurrentPosition();
         }
       });
+
       playerCanMove = this.mazeMap[playerPosition][direction];
     }
 

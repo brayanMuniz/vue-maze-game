@@ -26,12 +26,10 @@ const actions: ActionTree<any, any> = {
       .doc(payload)
       .get()
       .then(mazeData => {
-        if (mazeData.exists) {
-          convertedMaze = mazeConverter.fromFireStore(
-            mazeData.data(),
-            mazeData.id
-          );
-        }
+        convertedMaze = mazeConverter.fromFireStore(
+          mazeData.data(),
+          mazeData.id
+        );
       });
 
     return convertedMaze;

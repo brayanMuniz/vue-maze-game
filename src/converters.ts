@@ -1,6 +1,6 @@
 import { Player } from "@/classes/Player";
 import { firebaseMaze } from "@/classes/DBMaze";
-import { Maze, mazeData } from "@/classes/BaseMaze";
+import { Maze } from "@/classes/Maze";
 // Makes new player and adds documnet id instead of account id
 export interface playerFireStoreData {
   currentPosition: string;

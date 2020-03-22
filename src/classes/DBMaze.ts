@@ -1,4 +1,4 @@
-import { Maze, mazeData } from "./BaseMaze";
+import { Maze, mazeData } from "./Maze";
 import { Player } from "./Player";
 export class firebaseMaze extends Maze {
   players: Array<Player>;

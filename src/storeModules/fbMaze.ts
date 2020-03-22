@@ -2,7 +2,7 @@ import { ActionTree } from "vuex";
 import { GetterTree } from "vuex";
 import { MutationTree } from "vuex";
 import { firebaseData, dbSchema } from "@/firebaseConfig.ts";
-import { Maze } from "@/classes/BaseMaze";
+import { Maze } from "@/classes/Maze";
 import { mazeConverter } from "@/converters.ts";
 
 const state = {};

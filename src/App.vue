@@ -41,7 +41,7 @@ import {
   playerSnapshot,
   playingValue
 } from "./storeModules/fbPlayer";
-import { Maze } from "./classes/BaseMaze";
+import { Maze } from "./classes/Maze";
 import { firebaseMaze } from "./classes/DBMaze";
 import moment from "moment";
 export default Vue.extend({

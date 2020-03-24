@@ -1,4 +1,5 @@
 <template>
+  <!-- Todo: figure out what console is allowed with eslint and if it will be allowed in netlify  -->
   <div id="app">
     <div class="container-fluid">
       <!-- AntWnn37HeSw4xRPy2s3, 241m776ej6r17eunsAq9 -->
@@ -168,8 +169,7 @@ export default Vue.extend({
     },
     async createAnonymousAccount() {
       let newAccount: Account = new Account();
-      await newAccount.makeAnonymousAccount().then(res => {
-      });
+      await newAccount.makeAnonymousAccount().then(res => {});
     },
     // Todo: fix this, FirebaseError: No document to update: projects/maze-game-data/databases/(default)/
     async generateMazeSession() {
@@ -206,7 +206,7 @@ export default Vue.extend({
         player
       };
       return await store.dispatch("addPlayerToSession", data).catch(err => {
-        alert("problem adding you")
+        alert("problem adding you");
       });
     },
     // Todo: does not work because fieldName playerName does not exist. Update DB schema for capabilites

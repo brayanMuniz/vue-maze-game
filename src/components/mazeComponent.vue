@@ -9,19 +9,26 @@
       >
         <div class="p-3">
           <!-- Uncomment next line to show points -->
-          {{showCorrectPoint(row, col)}}
+          <!-- {{showCorrectPoint(row, col)}} -->
           <div class="input-group input-group-sm">
-            <input
-              @keyup.up="userMove(myDocumentId, 0 ,1)"
-              @keyup.down="userMove(myDocumentId, 0 ,-1)"
-              @keyup.left="userMove(myDocumentId, -1 ,0)"
-              @keyup.right="userMove(myDocumentId, 1 ,0)"
-              v-if="showPlayer(showCorrectPoint(row, col), playableMaze.players)"
-              class="form-control m-1"
-              :class="generatePlayerClasses(row, col)"
-              v-model="playerName"
-              v-focus="showCorrectPoint(row,col)"
-            />
+            <div class="row" v-if="showPlayer(showCorrectPoint(row, col), playableMaze.players)">
+              <div
+                class="col"
+                v-for="player in playersOnPoint(playableMaze.players, showCorrectPoint(row, col))"
+                :key="player.accountId"
+              >
+                <input
+                  @keyup.up="userMove(myDocumentId, 0 ,1)"
+                  @keyup.down="userMove(myDocumentId, 0 ,-1)"
+                  @keyup.left="userMove(myDocumentId, -1 ,0)"
+                  @keyup.right="userMove(myDocumentId, 1 ,0)"
+                  class="form-control m-1 p-0"
+                  :class="generatePlayerClasses(row, col, player)"
+                  v-model="playerName"
+                  v-focus="showCorrectPoint(row,col)"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -39,8 +46,8 @@ export default Vue.extend({
   name: "mazeComponent",
   directives: {
     focus: {
-      // "this" does not work here so use vnode
       inserted: (el, binding, vnode) => {
+        // "this" does not work here so use vnode
         if (vnode.context) {
           if (
             binding.value ===
@@ -146,12 +153,19 @@ export default Vue.extend({
       }
       return allClasses;
     },
-    generatePlayerClasses(x: number, y: number) {
+    generatePlayerClasses(x: number, y: number, player: Player) {
+      let playerClass: any = {
+        "bg-success": false
+      };
       let formatedPoint: string = this.showCorrectPoint(x, y);
       let myPoint = this.playableMaze.getPLayerPosition(this.myDocumentId);
-      let playerClass: any = {
-        "bg-success": formatedPoint === myPoint
-      };
+      if (
+        player.getAccountId() === this.myAccountId &&
+        formatedPoint === myPoint
+      ) {
+        playerClass["bg-success"] = true;
+      }
+
       return playerClass;
     },
     showCorrectPoint(row: number, col: number): string {
@@ -165,6 +179,15 @@ export default Vue.extend({
         }
       });
       return playerInPoint;
+    },
+    playersOnPoint(listOfPLayers: Array<Player>, point: string): Array<Player> {
+      let playersThere: Array<Player> = [];
+      listOfPLayers.forEach(player => {
+        if (player.getCurrentPosition() === point) {
+          playersThere.push(player);
+        }
+      });
+      return playersThere;
     }
   }
 });

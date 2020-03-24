@@ -11,6 +11,12 @@
         <input type="text" placeholder="Player Name" v-model="playerName" class="form-control" />-->
         <button @click="joinMazeSession(sessionId)" class="ml-1 btn btn-primary btn-sm">Join Game</button>
         <input type="text" placeholder="sessionId" v-model.trim="sessionId" class="form-control" />
+        <input
+          type="number"
+          placeholder="Steps To DB"
+          v-model="playerCountLimit"
+          class="form-control"
+        />
         <button @click="generateMazeSession()" class="ml-1 btn btn-primary btn-sm">New Game</button>
       </div>
       <button
@@ -24,6 +30,7 @@
         :playableMaze="playableMaze"
         :myAccountId="myAccountId"
         :myDocumentId="myDocumentId"
+        :playerCountLimit="Number(playerCountLimit)"
       />
     </div>
   </div>
@@ -58,7 +65,8 @@ export default Vue.extend({
       myAccountId: String(),
       myDocumentId: String(),
       playerName: String(),
-      myAccount: new Account()
+      myAccount: new Account(),
+      playerCountLimit: 2
     };
   },
   async mounted() {

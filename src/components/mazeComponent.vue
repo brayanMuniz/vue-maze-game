@@ -64,7 +64,8 @@ export default Vue.extend({
   props: {
     playableMaze: firebaseMaze,
     myAccountId: String,
-    myDocumentId: String
+    myDocumentId: String,
+    playerCountLimit: Number // prop so it can be adjusted by Nav from Root
   },
   data() {
     return {
@@ -74,8 +75,7 @@ export default Vue.extend({
       playerName: String(),
       playerMoveTimeCount: 0,
       playerMoveTimeCounterLimit: Number(), // this will update the lastPlayerMoveField. Dependent on size of maze
-      playerMoveCount: 0,
-      playerCountLimit: 3
+      playerMoveCount: 0
     };
   },
   mounted() {

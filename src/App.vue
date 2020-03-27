@@ -50,7 +50,7 @@ export default Vue.extend({
   name: "app",
   data() {
     return {
-      localSession: true,
+      localSession: false,
       dataReady: false,
       playableMaze: new firebaseMaze([], ""),
       startPostion: String(),

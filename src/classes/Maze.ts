@@ -30,23 +30,39 @@ export class Maze {
   public generateMaze(solutions: number, width: number, height: number) {
     this.mazeMap = this.fillMaze(width, height);
     this.unvisitedCells = Object.keys(this.mazeMap);
+    let visitedCells: Array<string> = [];
     let firstPoint: string = `${Math.floor(Math.random() * width)},${Math.floor(
       Math.random() * height
     )}`;
+    visitedCells.push(firstPoint);
     this.startPosition = firstPoint;
     this.removeFromUnvisitedList(firstPoint);
     let leadingPoint: string = firstPoint;
     let newBlock: Array<string> = [firstPoint];
     let switchCounter: number = 0;
-    // select random point from block and select new point that way
-    // generates seperate blocks that are never able to meet eachother
     while (this.unvisitedCells.length > 0) {
       if (switchCounter > 3) {
-        firstPoint = this.returnUnvisitedCell();
-        this.blocks.push(newBlock);
-        newBlock = [firstPoint];
-        switchCounter = 0;
+        let pointsToBranch = Array<string>();
+        let pointToBranchOff = String();
+        visitedCells.forEach(point => {
+          if (pointsToBranch.length === 0) {
+            pointToBranchOff = point;
+            pointsToBranch = this.potentialNeighborHelper(
+              point,
+              this.unvisitedCells
+            );
+          }
+        });
+        if (pointsToBranch.length >= 1) {
+          this.removeWall(pointToBranchOff, pointsToBranch[0]);
+          firstPoint = pointToBranchOff;
+        } else {
+          firstPoint = this.returnUnvisitedCell();
+          this.blocks.push(newBlock);
+          newBlock = [firstPoint];
+        }
         this.removeFromUnvisitedList(firstPoint);
+        switchCounter = 0;
       }
       let sideCell: string = this.getRandomNeighborCell(
         leadingPoint,
@@ -56,18 +72,37 @@ export class Maze {
       if (sideCell !== leadingPoint) {
         this.removeWall(leadingPoint, sideCell);
         this.removeFromUnvisitedList(sideCell);
+        visitedCells.push(sideCell);
         leadingPoint = sideCell;
         newBlock.push(leadingPoint);
       } else {
-        leadingPoint = firstPoint;
         switchCounter++;
+        leadingPoint = firstPoint;
       }
     }
 
     if (newBlock.length != 0 && !this.blocks.includes(newBlock)) {
       this.blocks.push(newBlock);
     }
+    if (this.blocks.length > 1) {
+      alert("Maze BrOkEn");
+    }
     this.generateSolutions(solutions);
+  }
+
+  private potentialNeighborHelper(
+    point: string,
+    playablePoints: Array<string>
+  ): Array<string> {
+    let deConstructedPoint = this.deConstructPoint(point);
+    let potentialNeighbors = Object.values(
+      this.generatePlayableCells(
+        deConstructedPoint.x,
+        deConstructedPoint.y,
+        playablePoints
+      )
+    );
+    return potentialNeighbors;
   }
 
   private generateSolutions(amountOfSolutions: number) {

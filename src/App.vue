@@ -2,13 +2,7 @@
   <!-- Todo: figure out what console is allowed with eslint and if it will be allowed in netlify  -->
   <div id="app">
     <div class="container-fluid">
-      <!-- AntWnn37HeSw4xRPy2s3, 241m776ej6r17eunsAq9 -->
-      <div class="input-group input-group-sm">
-        <!-- <button
-          @click="updatePlayerName(sessionId, myDocumentId, playerName)"
-          class="btn btn-primary btn-sm"
-        >Update Name</button>
-        <input type="text" placeholder="Player Name" v-model="playerName" class="form-control" />-->
+      <div class="input-group input-group-sm" v-if="!localSession">
         <button @click="joinMazeSession(sessionId)" class="ml-1 btn btn-primary btn-sm">Join Game</button>
         <input type="text" placeholder="sessionId" v-model.trim="sessionId" class="form-control" />
         <input
@@ -76,8 +70,13 @@ export default Vue.extend({
         let account: Account = new Account(user.uid);
         this.myAccount = account;
         this.myAccountId = this.myAccount.returnUid();
-        let testSessionId: string = "241m776ej6r17eunsAq9";
-        await this.joinMazeSession(testSessionId);
+        if (this.localSession === false) {
+          let testSessionId: string = "241m776ej6r17eunsAq9";
+          await this.joinMazeSession(testSessionId);
+        } else {
+          this.makeLocalSession(1, 11, 11); //! only works if height and width are the same
+          this.dataReady = true;
+        }
       } else {
         alert("Make account to play");
       }
@@ -179,7 +178,6 @@ export default Vue.extend({
       let newAccount: Account = new Account();
       await newAccount.makeAnonymousAccount().then(res => {});
     },
-    // Todo: fix this, FirebaseError: No document to update: projects/maze-game-data/databases/(default)/
     async generateMazeSession() {
       this.dataReady = false;
       let players: Array<Player> = [];
@@ -234,6 +232,13 @@ export default Vue.extend({
           newPLayerName
         });
       }
+    },
+    makeLocalSession(solutions: number, height: number, width: number) {
+      let players: Array<Player> = [];
+      let mazeId: string = "";
+      let newMaze = new firebaseMaze(players, mazeId);
+      newMaze.generateMaze(solutions, height, width);
+      this.setMaze(newMaze, mazeId);
     },
     setMaze(mazeData: firebaseMaze, mazeId: string) {
       this.playableMaze = mazeData;

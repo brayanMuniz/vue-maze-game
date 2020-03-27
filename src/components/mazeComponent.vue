@@ -9,7 +9,7 @@
       >
         <div class="p-3">
           <!-- Uncomment next line to show points -->
-          <!-- {{showCorrectPoint(row, col)}} -->
+          {{showCorrectPoint(row, col)}}
           <div class="input-group input-group-sm">
             <div class="row" v-if="showPlayer(showCorrectPoint(row, col), playableMaze.players)">
               <div

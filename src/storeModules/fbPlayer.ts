@@ -45,28 +45,6 @@ const actions: ActionTree<any, any> = {
       .doc(payload.gameId)
       .collection(dbSchema.players);
   },
-  async getPlayerDataOnce({ commit }, gameId: string) {
-    let allPlayers: Array<Player> = [];
-    await firebaseData
-      .firestore()
-      .collection(dbSchema.gameSessions)
-      .doc(gameId)
-      .collection(dbSchema.players)
-      .get()
-      .then(querySnapshot => {
-        querySnapshot.forEach(function(doc) {
-          let newPLayer: Player = new Player(
-            doc.data().currentPosition,
-            doc.id,
-            doc.data().currentlyPlaying,
-            doc.data().lastMoveTime
-          );
-          allPlayers.push(newPLayer);
-        });
-      });
-    commit("updateCurrentPlayers", allPlayers);
-    return allPlayers;
-  },
   async sendPlayerMove({ commit }, payload: playerMove) {
     const playerDoc = firebaseData
       .firestore()
@@ -98,7 +76,7 @@ const actions: ActionTree<any, any> = {
       .doc(payload.gameId)
       .collection(dbSchema.players)
       .doc(payload.playerDoc);
-    return playerDoc.update({
+    return await playerDoc.update({
       playerName: payload.newPlayerName
     });
   },

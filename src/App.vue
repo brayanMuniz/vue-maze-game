@@ -1,16 +1,30 @@
 <template>
   <!-- Todo: figure out what console is allowed with eslint and if it will be allowed in netlify  -->
   <div id="app">
-    <div class="container-fluid">
+    <div class="container-fluid mt-1">
       <div class="input-group input-group-sm" v-if="!localSession">
-        <button @click="joinMazeSession(sessionId)" class="ml-1 btn btn-primary btn-sm">Join Game</button>
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="basic-addon1">Session Id:</span>
+        </div>
         <input type="text" placeholder="sessionId" v-model.trim="sessionId" class="form-control" />
+        <button @click="joinMazeSession(sessionId)" class="mr-1 btn btn-primary btn-sm">Join Game</button>
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="basic-addon1">Update/Turn:</span>
+        </div>
         <input
           type="number"
           placeholder="Steps To DB"
           v-model="playerCountLimit"
-          class="form-control"
+          class="form-control mr-1"
         />
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="basic-addon1">Name:</span>
+        </div>
+        <input type="text" placeholder="Name" v-model="playerName" class="form-control" />
+        <button
+          @click="updatePlayerName(sessionId, myDocumentId, playerName)"
+          class="btn btn-primary btn-sm"
+        >Update Name</button>
         <button @click="generateMazeSession()" class="ml-1 btn btn-primary btn-sm">New Game</button>
       </div>
       <button
@@ -219,18 +233,22 @@ export default Vue.extend({
     async updatePlayerName(
       gameId: string,
       playerDoc: string,
-      newPLayerName: string
+      newPlayerName: string
     ) {
       if (
         gameId != undefined &&
         playerDoc != undefined &&
-        newPLayerName != undefined
+        newPlayerName != undefined
       ) {
-        return await store.dispatch("updatePlayerName", {
-          gameId,
-          playerDoc,
-          newPLayerName
-        });
+        await store
+          .dispatch("updatePlayerName", {
+            gameId,
+            playerDoc,
+            newPlayerName
+          })
+          .catch(err => {
+            alert("Err happen, but dont worry about it.");
+          });
       }
     },
     makeLocalSession(solutions: number, height: number, width: number) {

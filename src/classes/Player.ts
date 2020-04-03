@@ -5,11 +5,13 @@ export class Player {
   accountId: string;
   documentId: string;
   lastMoveTime: number;
+  playerName?: string;
   constructor(
     startPosition: string,
     documentId?: string,
     lastPlayerMove?: number,
-    accountId?: string
+    accountId?: string,
+    playerName?: string
   ) {
     this.currentPosition = startPosition;
     this.accountId = "";
@@ -23,6 +25,9 @@ export class Player {
     }
     if (lastPlayerMove != undefined) {
       this.lastMoveTime = lastPlayerMove;
+    }
+    if (playerName != undefined) {
+      this.playerName = playerName;
     }
   }
 
@@ -40,6 +45,10 @@ export class Player {
 
   public getDocumentId() {
     return this.documentId;
+  }
+
+  public getPlayerName() {
+    return this.playerName;
   }
 
   public replacePostion(x: number, y: number) {

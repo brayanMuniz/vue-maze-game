@@ -90,6 +90,10 @@ export class Maze {
     this.generateSolutions(solutions);
   }
 
+  public getStartPosition() {
+    return this.startPosition;
+  }
+
   private potentialNeighborHelper(
     point: string,
     playablePoints: Array<string>

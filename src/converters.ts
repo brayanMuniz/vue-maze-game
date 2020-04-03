@@ -5,8 +5,8 @@ import { Maze } from "@/classes/Maze";
 export interface playerFireStoreData {
   currentPosition: string;
   playerId: string;
-  currentlyPlaying: boolean;
   lastMoveTime: number;
+  playerName?: string;
 }
 
 export let playerConverter = {

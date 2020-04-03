@@ -7,7 +7,18 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {},
+  getters: {},
   mutations: {},
   actions: {},
-  modules: { fbMaze, fbPlayer, accountStore }
+  modules: {
+    fbMaze,
+    fbPlayer,
+    accountStore: {
+      namespaced: true,
+      state: accountStore.state,
+      getters: accountStore.getters,
+      mutations: accountStore.mutations,
+      actions: accountStore.mutations
+    }
+  }
 });

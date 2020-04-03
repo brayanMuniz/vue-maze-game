@@ -9,24 +9,16 @@
       >
         <div class="p-3">
           <!-- Uncomment next line to show points -->
+          <!-- goes on row: v-if="showPlayer(showCorrectPoint(row, col), playableMaze.players)" -->
           {{showCorrectPoint(row, col)}}
           <div class="input-group input-group-sm">
-            <div class="row" v-if="showPlayer(showCorrectPoint(row, col), playableMaze.players)">
+            <div class="row">
               <div
                 class="col"
                 v-for="player in playersOnPoint(playableMaze.players, showCorrectPoint(row, col))"
                 :key="player.accountId"
               >
-                <input
-                  @keyup.up="userMove(myDocumentId, 0 ,1)"
-                  @keyup.down="userMove(myDocumentId, 0 ,-1)"
-                  @keyup.left="userMove(myDocumentId, -1 ,0)"
-                  @keyup.right="userMove(myDocumentId, 1 ,0)"
-                  class="form-control m-1 p-0"
-                  :class="generatePlayerClasses(row, col, player)"
-                  v-model="playerName"
-                  v-focus="showCorrectPoint(row,col)"
-                />
+                <playerComponent :player="player" />
               </div>
             </div>
           </div>
@@ -38,105 +30,30 @@
 <script lang="ts">
 import Vue from "vue";
 import store from "@/store/store.ts";
+import playerComponent from "@/components/playerComponent.vue";
 import { firebaseMaze } from "../classes/DBMaze";
 import { Player } from "../classes/Player";
 import { playerMove } from "../storeModules/fbPlayer";
 import moment from "moment";
 export default Vue.extend({
   name: "mazeComponent",
-  directives: {
-    focus: {
-      inserted: (el, binding, vnode) => {
-        // "this" does not work here so use vnode
-        if (vnode.context) {
-          if (
-            binding.value ===
-            vnode.context.$props.playableMaze.getPLayerPosition(
-              vnode.context.$props.myDocumentId
-            )
-          ) {
-            el.focus();
-          }
-        }
-      }
-    }
-  },
   props: {
     playableMaze: firebaseMaze,
-    myAccountId: String,
-    myDocumentId: String,
-    playerCountLimit: Number // prop so it can be adjusted by Nav from Root
+    playerCountLimit: Number
   },
   data() {
     return {
       dataReady: false,
       tempRow: Number(),
-      gameId: String(),
-      playerName: String(),
-      playerMoveTimeCount: 0,
-      playerMoveTimeCounterLimit: Number(), // this will update the lastPlayerMoveField. Dependent on size of maze
-      playerMoveCount: 0
+      playerMoveTimeCount: 0
     };
   },
   mounted() {
     this.tempRow = this.playableMaze.height - 1;
-    this.gameId = this.playableMaze.mazeId; // update propety to gameId
-    this.playerMoveTimeCounterLimit = Math.floor(
-      (this.playableMaze.height * this.playableMaze.width) / 10
-    );
+    console.log(this.playableMaze);
     this.dataReady = true;
   },
   methods: {
-    async movePlayerDB(newMove: playerMove) {
-      return store.dispatch("sendPlayerMove", newMove);
-    },
-    async lastMoveTimeUpdate(playerId: string) {
-      let payload = {
-        playerId,
-        gameId: this.gameId,
-        newLastMoveTimeSeconds: moment().unix()
-      };
-      return store.dispatch("updatePlayerLastMoveTime", payload);
-    },
-    async userMove(documentId: string, x: number, y: number) {
-      if (this.playableMaze.checkPlayerMove(documentId, x, y)) {
-        let newPosition: string = this.playableMaze.movePLayer(
-          documentId,
-          x,
-          y
-        );
-        let playerMove: playerMove = {
-          documentId,
-          newPlayerPostion: newPosition,
-          gameID: this.gameId
-        };
-        this.playerMoveCount++;
-        this.playerMoveTimeCount++;
-
-        // Updates the last time player moved in DB
-        if (this.playerMoveTimeCount == this.playerMoveTimeCounterLimit) {
-          await this.lastMoveTimeUpdate(documentId)
-            .then(res => {
-              this.playerMoveTimeCount = 0;
-            })
-            .catch(err => {});
-        }
-        // Updates player move in DB
-        if (this.playerMoveCount == this.playerCountLimit) {
-          await this.movePlayerDB(playerMove)
-            .then(res => {
-              this.playerMoveCount = 0;
-            })
-            .catch(err => {
-              alert("stop");
-            });
-        }
-      }
-    },
-    generatePlayer(startPosition: string, id: string) {
-      let newPlayer: Player = new Player(startPosition, id);
-      return newPlayer;
-    },
     generateCellClasses(x: number, y: number) {
       let correctPoint: string = this.showCorrectPoint(x, y);
       let allClasses: any = {
@@ -152,21 +69,6 @@ export default Vue.extend({
         allClasses["endPoint"] = true;
       }
       return allClasses;
-    },
-    generatePlayerClasses(x: number, y: number, player: Player) {
-      let playerClass: any = {
-        "bg-success": false
-      };
-      let formatedPoint: string = this.showCorrectPoint(x, y);
-      let myPoint = this.playableMaze.getPLayerPosition(this.myDocumentId);
-      if (
-        player.getAccountId() === this.myAccountId &&
-        formatedPoint === myPoint
-      ) {
-        playerClass["bg-success"] = true;
-      }
-
-      return playerClass;
     },
     showCorrectPoint(row: number, col: number): string {
       return `${col - 1},${Math.abs(row - 1 - this.tempRow)}`;
@@ -189,7 +91,20 @@ export default Vue.extend({
       });
       return playersThere;
     }
+  },
+  components: {
+    playerComponent
   }
 });
 </script>
+
+<style lang="scss">
+.startPoint {
+  background-color: lightblue;
+}
+
+.endPoint {
+  background-color: lightcoral;
+}
+</style>
 

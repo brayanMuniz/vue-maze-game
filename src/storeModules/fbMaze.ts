@@ -4,10 +4,21 @@ import { MutationTree } from "vuex";
 import { firebaseData, dbSchema } from "@/firebaseConfig.ts";
 import { Maze } from "@/classes/Maze";
 import { mazeConverter } from "@/converters.ts";
+import { firebaseMaze } from "@/classes/DBMaze";
 
-const state = {};
-const getters: GetterTree<any, any> = {};
-const mutations: MutationTree<any> = {};
+const state = {
+  currentMaze: new firebaseMaze([], "")
+};
+const getters: GetterTree<any, any> = {
+  getCurrentMaze(state) {
+    return state.currentMaze;
+  }
+};
+const mutations: MutationTree<any> = {
+  updateCurrentMaze(state, newMaze: firebaseMaze) {
+    state.currentMaze = newMaze;
+  }
+};
 const actions: ActionTree<any, any> = {
   async makeGameSession({ commit }, payload: Maze) {
     let gameSessionCollection = firebaseData
@@ -31,7 +42,7 @@ const actions: ActionTree<any, any> = {
           mazeData.id
         );
       });
-
+    commit("updateCurrentMaze", convertedMaze);
     return convertedMaze;
   }
 };

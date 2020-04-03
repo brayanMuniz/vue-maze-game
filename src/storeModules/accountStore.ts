@@ -1,26 +1,39 @@
 import { ActionTree } from "vuex";
 import { GetterTree } from "vuex";
 import { MutationTree } from "vuex";
-import { Account } from "@/classes/Account";
 
 const state = {
-  myAccount: {}
+  myUid: String(),
+  myDocId: String()
 };
 const getters: GetterTree<any, any> = {
-  getMyAccount(state) {
-    return state.myAccount;
+  getMyAccountId(state) {
+    return state.myUid;
+  },
+  getMyDocId(state) {
+    return state.myDocId;
   }
 };
 const mutations: MutationTree<any> = {
-  updateAccount(newAccount: Account) {
-    state.myAccount = newAccount;
+  // !Problem was that I kept getting an infinite repeat object on getter call
+  // *** Bug Fixed Lesson:
+  //  *** Fix: forgot to add state to the parameter
+  setMyUid(state, newUid: string) {
+    state.myUid = newUid;
+  },
+  setMyDocId(state, newDocId: string) {
+    state.myDocId = newDocId;
   }
 };
 const actions: ActionTree<any, any> = {};
 
+export const accountMutationsSchema = {
+  setMyUid: "setMyUid"
+};
+
 export default {
-  actions,
-  mutations,
+  state,
   getters,
-  state
+  mutations,
+  actions
 };

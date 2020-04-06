@@ -70,7 +70,6 @@ export default Vue.extend({
       players: Array<Player>(),
       sessionId: String(),
       myAccountId: String(),
-      myDocumentId: String(),
       playerName: String(),
       myAccount: new Account(),
       playerCountLimit: 2
@@ -173,9 +172,7 @@ export default Vue.extend({
             });
           });
         })
-        .catch(err => {
-          
-        });
+        .catch(err => {});
     },
     async listenPlayerMoves(gameId: string) {
       let payload = {
@@ -239,6 +236,10 @@ export default Vue.extend({
             playerDoc,
             newPlayerName
           })
+          .then(res => {
+            console.log("Updated PlayerName");
+            this.playerName = newPlayerName;
+          })
           .catch(err => {
             alert("Err happen, but dont worry about it.");
           });
@@ -257,10 +258,15 @@ export default Vue.extend({
         this.playableMaze.addPlayer(newPlayer);
       }
       if (changeType === "modified") {
+        console.log("change");
         if (changeDoc.doc.id != store.getters["accountStore/getMyDocId"]) {
           let x: number = changeDoc.doc.data().currentPosition.split(",")[0];
           let y: number = changeDoc.doc.data().currentPosition.split(",")[1];
           this.playableMaze.replacePlayerPosition(changeDoc.doc.id, x, y);
+          this.playableMaze.updatePlayerName(
+            changeDoc.doc.id,
+            changeDoc.doc.data().playerName
+          );
         }
       }
       if (changeType === "removed") {

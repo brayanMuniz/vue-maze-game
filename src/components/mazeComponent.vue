@@ -18,7 +18,7 @@
                 v-for="player in playersOnPoint(playableMaze.players, showCorrectPoint(row, col))"
                 :key="player.accountId"
               >
-                <playerComponent :player="player" />
+                <playerComponent :player="player" :playerCountLimit='playerCountLimit' :gameId='playableMaze.mazeId' />
               </div>
             </div>
           </div>
@@ -50,7 +50,6 @@ export default Vue.extend({
   },
   mounted() {
     this.tempRow = this.playableMaze.height - 1;
-    console.log(this.playableMaze);
     this.dataReady = true;
   },
   methods: {

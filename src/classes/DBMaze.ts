@@ -13,6 +13,16 @@ export class firebaseMaze extends Maze {
     this.mazeId = mazeId;
   }
 
+  public getPlayerByDoc(playerDoc: string): Player | undefined {
+    let selectedPlayer: Player | undefined = undefined;
+    this.players.forEach(player => {
+      if (player.documentId == playerDoc) {
+        selectedPlayer = player;
+      }
+    });
+    return selectedPlayer;
+  }
+
   public checkIfPlayerInGame(playerUid: string): boolean {
     let inGame: boolean = false;
     this.players.forEach(player => {
@@ -58,6 +68,14 @@ export class firebaseMaze extends Maze {
     });
 
     return currentPosition;
+  }
+
+  public updatePlayerName(documentId: string, newName: string) {
+    let selectedPlayer: Player | undefined = this.getPlayerByDoc(documentId);
+    if (selectedPlayer != undefined) {
+      if (selectedPlayer.checkForChangeInName(newName))
+        selectedPlayer.updateName(newName);
+    }
   }
 
   public replacePlayerPosition(documentId: string, x: number, y: number) {

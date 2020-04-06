@@ -7,16 +7,30 @@ import { playerConverter } from "@/converters";
 // Todo: change to shcema
 
 const state: playerState = {
-  currentPlayers: Array<Player>()
+  currentPlayers: Array<Player>(),
+  playerMoveCount: 0,
+  playerMoveTimeCount: 0,
 };
 const getters: GetterTree<any, any> = {
   getCurrentPlayers() {
     return state.currentPlayers;
-  }
+  },
+  getPlayerMoveCount() {
+    return state.playerMoveCount;
+  },
+  getPlayerMoveTimeCount() {
+    return state.playerMoveTimeCount;
+  },
 };
 const mutations: MutationTree<any> = {
   updateCurrentPlayers(state, newPLayers: Array<Player>) {
     state.currentPlayers = newPLayers;
+  },
+  updatePlayerMoveCount(state, incrementAmount: number) {
+    state.playerMoveCount += incrementAmount;
+  },
+  updatePlayerMoveTimeCount(state, incrementAmount: number) {
+    state.playerMoveTimeCount += incrementAmount;
   }
 };
 const actions: ActionTree<any, any> = {
@@ -54,7 +68,7 @@ const actions: ActionTree<any, any> = {
       .doc(payload.documentId);
 
     return await playerDoc.update({
-      currentPosition: payload.newPlayerPostion
+      currentPosition: payload.newPlayerPostion,
     });
   },
   // ? Could I have one master update player ?
@@ -66,7 +80,7 @@ const actions: ActionTree<any, any> = {
       .collection(dbSchema.players)
       .doc(payload.playerId);
     return playerDoc.update({
-      lastMoveTime: payload.lastMoveTime
+      lastMoveTime: payload.lastMoveTime,
     });
   },
   async updatePlayerName({ commit }, payload: any) {
@@ -77,7 +91,7 @@ const actions: ActionTree<any, any> = {
       .collection(dbSchema.players)
       .doc(payload.playerDoc);
     return await playerDoc.update({
-      playerName: payload.newPlayerName
+      playerName: payload.newPlayerName,
     });
   },
   async updatePlayerLastMoveTime({ commit }, payload: any) {
@@ -88,9 +102,9 @@ const actions: ActionTree<any, any> = {
       .collection(dbSchema.players)
       .doc(payload.playerId);
     return playerDoc.update({
-      lastMoveTime: payload.newLastMoveTimeSeconds
+      lastMoveTime: payload.newLastMoveTimeSeconds,
     });
-  }
+  },
 };
 
 export interface playingValue {
@@ -117,6 +131,8 @@ interface playerSnapShotDataFunction {
 }
 export interface playerState {
   currentPlayers: Array<Player>;
+  playerMoveCount: number;
+  playerMoveTimeCount: number;
 }
 
 export interface playerGameSession {
@@ -133,5 +149,5 @@ export default {
   actions,
   mutations,
   getters,
-  state
+  state,
 };

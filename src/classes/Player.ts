@@ -35,6 +35,17 @@ export class Player {
     return this.currentPosition;
   }
 
+  public checkForChangeInName(newName: string) {
+    let changeName: boolean = false;
+    if (newName != this.playerName) {
+      changeName = true;
+    }
+    return changeName;
+  }
+  public updateName(newName: string) {
+    this.playerName = newName;
+  }
+
   public getLastMoveTimeSeconds(): number {
     return this.lastMoveTime;
   }

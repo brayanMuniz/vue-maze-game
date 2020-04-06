@@ -42,28 +42,39 @@ export default Vue.extend({
   },
   props: {
     playerCountLimit: Number,
-    player: Object
+    player: Object,
+    gameId: String
+  },
+  watch: {
+    player: {
+      handler(val) {
+        console.log(val);
+        // if (this.player.checkForChangeInName(val.playerName)) {
+        //   this.playerName = val.playerName;
+        // } else {
+        //   console.log("hmm");
+        // }
+      },
+      deep: true
+    }
   },
   data() {
     return {
       dataReady: false,
-      gameId: String(),
       playerName: String(),
       playerMoveTimeCount: 0,
       playerMoveTimeCounterLimit: Number(),
       playerMoveCount: 0,
-      myDocumentId: String()
+      myDocumentId: store.getters["accountStore/getMyDocId"]
     };
   },
   mounted() {
-    this.myDocumentId = store.getters["accountStore/getMyDocId"];
+    if (this.myDocumentId === "" || this.myDocumentId === undefined) {
+      this.myDocumentId = store.getters["accountStore/getMyDocId"];
+    }
     this.playerName = this.player.getPlayerName();
-    console.log(this.player);
   },
   methods: {
-    async movePlayerDB(newMove: playerMove) {
-      return store.dispatch("sendPlayerMove", newMove);
-    },
     async lastMoveTimeUpdate(playerId: string) {
       let payload = {
         playerId,
@@ -74,6 +85,7 @@ export default Vue.extend({
     },
     async userMove(documentId: string, x: number, y: number) {
       let currentMaze: firebaseMaze = store.getters.getCurrentMaze;
+
       if (currentMaze.checkPlayerMove(documentId, x, y)) {
         let newPosition: string = currentMaze.movePLayer(documentId, x, y);
         let playerMove: playerMove = {
@@ -81,26 +93,38 @@ export default Vue.extend({
           newPlayerPostion: newPosition,
           gameID: this.gameId
         };
-        this.playerMoveCount++;
-        this.playerMoveTimeCount++;
+
+        store.commit("updatePlayerMoveCount", 1);
+        store.commit("updatePlayerMoveTimeCount", 1);
 
         // Updates the last time player moved in DB
-        if (this.playerMoveTimeCount == this.playerMoveTimeCounterLimit) {
+        let playerMoveTimeCount: number = store.getters.getPlayerMoveTimeCount;
+        if (playerMoveTimeCount === this.playerMoveTimeCounterLimit) {
           await this.lastMoveTimeUpdate(documentId)
             .then(res => {
-              this.playerMoveTimeCount = 0;
+              store.commit("updatePlayerMoveTimeCount", -playerMoveTimeCount);
             })
-            .catch(err => {});
+            .catch(err => {
+              console.error("Err happend, but dont worry about it");
+              console.error(err);
+            });
         }
-        // Updates player move in DB
-        if (this.playerMoveCount == this.playerCountLimit) {
-          await this.movePlayerDB(playerMove)
+
+        // Updates player position in DB
+        let playerMoveCount: number = store.getters.getPlayerMoveCount;
+        if (playerMoveCount === this.playerCountLimit) {
+          await store
+            .dispatch("sendPlayerMove", playerMove)
             .then(res => {
-              this.playerMoveCount = 0;
+              store.commit("updatePlayerMoveCount", -playerMoveCount);
             })
             .catch(err => {
               alert("stop");
             });
+        }
+
+        if (currentMaze.checkPlayerReachedEnd(this.player)) {
+          alert("STOP YOU WON");
         }
       }
     },

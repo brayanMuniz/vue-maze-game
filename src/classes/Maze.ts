@@ -1,3 +1,5 @@
+import { Player } from "./Player";
+
 export class Maze {
   solutions: number;
   startPosition: string;
@@ -27,6 +29,11 @@ export class Maze {
     }
   }
 
+  public checkPlayerReachedEnd(player: Player): boolean {
+    if (this.endPositions.includes(player.getCurrentPosition())) return true;
+    return false;
+  }
+
   public generateMaze(solutions: number, width: number, height: number) {
     this.mazeMap = this.fillMaze(width, height);
     this.unvisitedCells = Object.keys(this.mazeMap);
@@ -44,7 +51,7 @@ export class Maze {
       if (switchCounter > 3) {
         let pointsToBranch = Array<string>();
         let pointToBranchOff = String();
-        visitedCells.forEach(point => {
+        visitedCells.forEach((point) => {
           if (pointsToBranch.length === 0) {
             pointToBranchOff = point;
             pointsToBranch = this.potentialNeighborHelper(
@@ -142,7 +149,7 @@ export class Maze {
           N: false,
           S: false,
           E: false,
-          W: false
+          W: false,
         };
       }
     }
@@ -199,7 +206,7 @@ export class Maze {
   private deConstructPoint(point: string) {
     return {
       x: Number(point.split(",")[0]),
-      y: Number(point.split(",")[1])
+      y: Number(point.split(",")[1]),
     };
   }
 

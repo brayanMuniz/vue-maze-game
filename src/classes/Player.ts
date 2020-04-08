@@ -5,15 +5,18 @@ export class Player {
   accountId: string;
   documentId: string;
   lastMoveTime: number;
+  wonGame: boolean;
   playerName?: string;
   constructor(
     startPosition: string,
+    wonGame: boolean,
     documentId?: string,
     lastPlayerMove?: number,
     accountId?: string,
     playerName?: string
   ) {
     this.currentPosition = startPosition;
+    this.wonGame = wonGame;
     this.accountId = "";
     this.documentId = "";
     if (documentId != undefined) {

@@ -10,6 +10,7 @@ const state: playerState = {
   currentPlayers: Array<Player>(),
   playerMoveCount: 0,
   playerMoveTimeCount: 0,
+  gameWon: false,
 };
 const getters: GetterTree<any, any> = {
   getCurrentPlayers() {
@@ -31,8 +32,13 @@ const mutations: MutationTree<any> = {
   },
   updatePlayerMoveTimeCount(state, incrementAmount: number) {
     state.playerMoveTimeCount += incrementAmount;
-  }
+  },
+  updateGameWon(state, newValue: boolean) {
+    state.gameWon = newValue;
+  },
 };
+// Todo: there is a lot of repetition with referencing the player doc. Make a state of where the player is in the db
+// Todo: At least make an interface that forces the relative path and adds optional parameters to specify which one you are going to use. 
 const actions: ActionTree<any, any> = {
   async addPlayerToSession({ commit }, payload: playerGameSession) {
     let mazePlayerSubCollection = firebaseData
@@ -105,6 +111,20 @@ const actions: ActionTree<any, any> = {
       lastMoveTime: payload.newLastMoveTimeSeconds,
     });
   },
+  // Might be problem, whoever reaches the db first might be able to win first even if other person got there first
+  // Could solve this by addinga time won field
+  async triggerPlayerWon({ commit }, payload: any) {
+    let playerDoc = firebaseData
+      .firestore()
+      .collection(dbSchema.gameSessions)
+      .doc(payload.gameId)
+      .collection(dbSchema.players)
+      .doc(payload.playerId);
+    commit('updateGameWon', true)
+    return playerDoc.update({
+      wonGame: true,
+    });
+  },
 };
 
 export interface playingValue {
@@ -133,6 +153,7 @@ export interface playerState {
   currentPlayers: Array<Player>;
   playerMoveCount: number;
   playerMoveTimeCount: number;
+  gameWon: boolean;
 }
 
 export interface playerGameSession {

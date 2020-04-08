@@ -84,7 +84,7 @@ export default Vue.extend({
         this.myAccountId = this.myAccount.returnUid();
         store.commit("accountStore/setMyUid", user.uid);
         if (this.localSession === false) {
-          let testSessionId: string = "1S7dFv7uzKtoPpgOh9En";
+          let testSessionId: string = "HF02IA7N75q5dORgUMKt";
           await this.joinMazeSession(testSessionId);
         } else {
           this.makeLocalSession(1, 12, 12); //! only works if height and width are the same
@@ -210,6 +210,7 @@ export default Vue.extend({
     ) {
       let player: Player = new Player(
         startPosition,
+        false,
         undefined,
         moment().unix(),
         accountId,
@@ -250,6 +251,7 @@ export default Vue.extend({
         let playerData: Player = changeDoc.doc.data();
         let newPlayer: Player = new Player(
           playerData.currentPosition,
+          playerData.wonGame,
           changeDoc.doc.id,
           playerData.lastMoveTime,
           playerData.accountId,
@@ -258,7 +260,7 @@ export default Vue.extend({
         this.playableMaze.addPlayer(newPlayer);
       }
       if (changeType === "modified") {
-        console.log("change");
+        // Todo: add a wonGame listener
         if (changeDoc.doc.id != store.getters["accountStore/getMyDocId"]) {
           let x: number = changeDoc.doc.data().currentPosition.split(",")[0];
           let y: number = changeDoc.doc.data().currentPosition.split(",")[1];
@@ -267,6 +269,12 @@ export default Vue.extend({
             changeDoc.doc.id,
             changeDoc.doc.data().playerName
           );
+        }
+        if (changeDoc.doc.data().wonGame) {
+          let name = changeDoc.doc.data().playerName;
+          if (name === undefined) name = "BRUH";
+          let msg = `This guy,  ${name}, won`;
+          alert(msg);
         }
       }
       if (changeType === "removed") {
@@ -283,6 +291,7 @@ export default Vue.extend({
       newMaze.generateMaze(solutions, height, width);
       let myPlayer: Player = new Player(
         newMaze.getStartPosition(),
+        false,
         testDocId,
         moment().unix(),
         myAccountId,

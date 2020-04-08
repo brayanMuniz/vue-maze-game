@@ -122,9 +122,15 @@ export default Vue.extend({
               alert("stop");
             });
         }
-
         if (currentMaze.checkPlayerReachedEnd(this.player)) {
-          alert("STOP YOU WON");
+          let payload: any = {
+            gameId: currentMaze.getGameId(),
+            playerId: this.player.getDocumentId()
+          };
+          store.dispatch("triggerPlayerWon", payload);
+          // 1. add a wonGame field to player
+          // 1.1 change the field type for newPlayer
+          // 2. Im the player handler method, In app.vue, trigger a playerName has won
         }
       }
     },

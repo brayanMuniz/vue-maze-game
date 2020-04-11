@@ -17,14 +17,17 @@
           v-model="playerCountLimit"
           class="form-control mr-1"
         />
-        <div class="input-group-prepend">
-          <span class="input-group-text" id="basic-addon1">Name:</span>
-        </div>
+
         <input type="text" placeholder="Name" v-model="playerName" class="form-control" />
         <button
           @click="updatePlayerName(sessionId, playerName)"
           class="btn btn-primary btn-sm"
         >Update Name</button>
+        <div class="input-group-prepend">
+          <span class="input-group-text" id="basic-addon1">Size:</span>
+        </div>
+        <input type="number" placeholder="mazeSize" v-model="mazeSize" class="form-control" />
+
         <button @click="generateMazeSession()" class="ml-1 btn btn-primary btn-sm">New Game</button>
       </div>
       <button
@@ -53,12 +56,15 @@ import {
   playerSnapshot,
   playingValue
 } from "./storeModules/fbPlayer";
-import { Maze } from "./classes/Maze";
+import { Maze, mazeMap } from "./classes/Maze";
 import { firebaseMaze } from "./classes/DBMaze";
 import accountStore, {
   accountMutationsSchema
 } from "@/storeModules/accountStore";
 import moment from "moment";
+import { mazeConverter } from "./converters";
+// ! Strange Err:
+// ! Whenever I use the converters it affects the playable maze
 export default Vue.extend({
   name: "app",
   data() {
@@ -66,6 +72,7 @@ export default Vue.extend({
       localSession: false,
       dataReady: false,
       playableMaze: new firebaseMaze([], ""),
+      mazeSize: 16,
       startPostion: String(),
       players: Array<Player>(),
       sessionId: String(),
@@ -84,10 +91,31 @@ export default Vue.extend({
         this.myAccountId = this.myAccount.returnUid();
         store.commit("accountStore/setMyUid", user.uid);
         if (this.localSession === false) {
-          let testSessionId: string = "HF02IA7N75q5dORgUMKt";
+          // DB would crash at around 600 mazeSize
+          let testSessionId: string = "eytFaXHgdNvJDFtvdrCF";
           await this.joinMazeSession(testSessionId);
         } else {
-          this.makeLocalSession(1, 12, 12); //! only works if height and width are the same
+          this.makeLocalSession(1, this.mazeSize, this.mazeSize); //! only works if height and width are the same
+          let defaultMapSize = this.playableMaze.checkMazeMapSize();
+          let max: number = this.playableMaze.height - 1;
+          let optimizedMap = mazeConverter.toFireStoreMazeMap(
+            this.playableMaze.mazeMap,
+            max
+          );
+          this.playableMaze.mazeMap = optimizedMap;
+          let optimizedMapSize = this.playableMaze.checkMazeMapSize();
+          console.log(
+            "with height and with of",
+            this.mazeSize,
+            "default size:",
+            defaultMapSize,
+            "new:",
+            optimizedMapSize
+          );
+          this.playableMaze.mazeMap = mazeConverter.fromFireStoreMazeMap(
+            optimizedMap,
+            max
+          );
           this.dataReady = true;
         }
       } else {
@@ -111,10 +139,11 @@ export default Vue.extend({
       await this.getMazeData(gameId)
         .then((mazeDataResult: firebaseMaze) => {
           this.setMaze(mazeDataResult, gameId);
+          console.log(mazeDataResult.mazeMap);
           gameReady.mazeReady = true;
         })
         .catch(err => {
-          console.log(err);
+          console.error(err);
           gameReady.mazeReady = false;
         });
 
@@ -172,7 +201,9 @@ export default Vue.extend({
             });
           });
         })
-        .catch(err => {});
+        .catch(err => {
+          console.error(err);
+        });
     },
     async listenPlayerMoves(gameId: string) {
       let payload = {
@@ -186,19 +217,24 @@ export default Vue.extend({
       await newAccount.makeAnonymousAccount().then(res => {});
     },
     async generateMazeSession() {
-      this.dataReady = false;
-      let players: Array<Player> = [];
-      let mazeId: string = "";
-      let newMaze = new firebaseMaze(players, mazeId);
-      newMaze.generateMaze(1, 11, 11);
-      await store
-        .dispatch("makeGameSession", newMaze)
-        .then(async mazeDataDoc => {
-          this.joinMazeSession(mazeDataDoc.id);
-        })
-        .catch(err => {
-          alert("help");
-        });
+      if (this.mazeSize > 0 && this.mazeSize < 17) {
+        this.dataReady = false;
+        let players: Array<Player> = [];
+        let mazeId: string = "";
+        let newMaze = new firebaseMaze(players, mazeId);
+        newMaze.generateMaze(1, this.mazeSize, this.mazeSize);
+        await store
+          .dispatch("makeGameSession", newMaze)
+          .then(async mazeDataDoc => {
+            this.joinMazeSession(mazeDataDoc.id);
+          })
+          .catch(err => {
+            console.error(err);
+            alert("not able to make new maze");
+          });
+      } else {
+        alert("Lol lower that number fam.");
+      }
     },
     async getMazeData(sessionId: string) {
       return await store.dispatch("getMazeDataOnce", sessionId);
@@ -298,7 +334,6 @@ export default Vue.extend({
         "myName"
       );
       newMaze.addPlayer(myPlayer);
-
       store.commit("accountStore/setMyDocId", testDocId);
       this.setMaze(newMaze, mazeId);
     },
@@ -324,4 +359,6 @@ export default Vue.extend({
 .endPoint {
   background-color: lightcoral;
 }
+
+$grid-columns: 40; // allows bootstrap to have rows and col up to 40 until breaking to new line
 </style>

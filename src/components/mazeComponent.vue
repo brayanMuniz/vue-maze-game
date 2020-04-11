@@ -9,7 +9,6 @@
       >
         <div class="p-3">
           <!-- Uncomment next line to show points -->
-          <!-- goes on row: v-if="showPlayer(showCorrectPoint(row, col), playableMaze.players)" -->
           {{showCorrectPoint(row, col)}}
           <div class="input-group input-group-sm">
             <div class="row">
@@ -18,7 +17,11 @@
                 v-for="player in playersOnPoint(playableMaze.players, showCorrectPoint(row, col))"
                 :key="player.accountId"
               >
-                <playerComponent :player="player" :playerCountLimit='playerCountLimit' :gameId='playableMaze.mazeId' />
+                <playerComponent
+                  :player="player"
+                  :playerCountLimit="playerCountLimit"
+                  :gameId="playableMaze.mazeId"
+                />
               </div>
             </div>
           </div>
@@ -54,6 +57,8 @@ export default Vue.extend({
   },
   methods: {
     generateCellClasses(x: number, y: number) {
+      // Todo: use the get neighbor function to cross reference points to see if it has a true value
+      // Example: lets say this is point 0,0 and N is not in there, but 0,1 South might have it as true, so check that neighbor
       let correctPoint: string = this.showCorrectPoint(x, y);
       let allClasses: any = {
         "border-top": !this.playableMaze.mazeMap[correctPoint].N,

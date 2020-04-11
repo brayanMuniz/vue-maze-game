@@ -1,7 +1,6 @@
 import { Player } from "@/classes/Player";
 import { firebaseMaze } from "@/classes/DBMaze";
 import { Maze, mazeMap } from "@/classes/Maze";
-// Makes new player and adds documnet id instead of account id
 export interface playerFireStoreData {
   currentPosition: string;
   playerId: string;
@@ -64,23 +63,47 @@ export let mazeConverter = {
 
       if (!value.N) {
         delete mazeMap[point].N;
-        delete mazeMap[findNeighborPoint(point, "S", max)].S;
+        let neighborPoint = findNeighborPoint(point, "N", max);
+        if (neighborPoint != point) {
+          delete mazeMap[neighborPoint].S;
+        }
       }
+      // else {
+      //   delete mazeMap[point].N;
+      // }
 
       if (!value.S) {
         delete mazeMap[point].S;
-        delete mazeMap[findNeighborPoint(point, "N", max)].N;
+        let neighborPoint = findNeighborPoint(point, "S", max);
+        if (neighborPoint != point) {
+          delete mazeMap[neighborPoint].N;
+        }
       }
+      // else {
+      //   delete mazeMap[point].S;
+      // }
 
       if (!value.E) {
         delete mazeMap[point].E;
-        delete mazeMap[findNeighborPoint(point, "W", max)].W;
+        let neighborPoint = findNeighborPoint(point, "E", max);
+        if (neighborPoint != point) {
+          delete mazeMap[neighborPoint].W;
+        }
       }
+      // else {
+      //   delete mazeMap[point].E;
+      // }
 
       if (!value.W) {
         delete mazeMap[point].W;
-        delete mazeMap[findNeighborPoint(point, "E", max)].E;
+        let neighborPoint = findNeighborPoint(point, "W", max);
+        if (neighborPoint != point) {
+          delete mazeMap[neighborPoint].E;
+        }
       }
+      //  else {
+      //   delete mazeMap[point].W;
+      // }
     }
     // Since some points might not have any values they will be removed
     // Firebase does not allow empty values

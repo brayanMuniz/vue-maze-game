@@ -8,7 +8,7 @@ export class Maze {
   width: number;
   height: number;
   private unvisitedCells: Array<string>;
-  private blocks: Array<Array<string>>;
+  blocks: Array<Array<string>>;
 
   constructor(fromFirestoreMazeData?: mazeData) {
     this.solutions = 0;

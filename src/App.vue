@@ -72,7 +72,7 @@ export default Vue.extend({
       localSession: false,
       dataReady: false,
       playableMaze: new firebaseMaze([], ""),
-      mazeSize: 16,
+      mazeSize: 12,
       startPostion: String(),
       players: Array<Player>(),
       sessionId: String(),
@@ -92,30 +92,12 @@ export default Vue.extend({
         store.commit("accountStore/setMyUid", user.uid);
         if (this.localSession === false) {
           // DB would crash at around 600 mazeSize
-          let testSessionId: string = "eytFaXHgdNvJDFtvdrCF";
+          // 17: oA8nRJLR2Jprgek9xpEM, crashes at 18: l8pcnORsDp1dP6kyBUhc
+          let testSessionId: string = "oA8nRJLR2Jprgek9xpEM";
           await this.joinMazeSession(testSessionId);
         } else {
           this.makeLocalSession(1, this.mazeSize, this.mazeSize); //! only works if height and width are the same
-          let defaultMapSize = this.playableMaze.checkMazeMapSize();
-          let max: number = this.playableMaze.height - 1;
-          let optimizedMap = mazeConverter.toFireStoreMazeMap(
-            this.playableMaze.mazeMap,
-            max
-          );
-          this.playableMaze.mazeMap = optimizedMap;
-          let optimizedMapSize = this.playableMaze.checkMazeMapSize();
-          console.log(
-            "with height and with of",
-            this.mazeSize,
-            "default size:",
-            defaultMapSize,
-            "new:",
-            optimizedMapSize
-          );
-          this.playableMaze.mazeMap = mazeConverter.fromFireStoreMazeMap(
-            optimizedMap,
-            max
-          );
+          this.testConverter();
           this.dataReady = true;
         }
       } else {
@@ -124,6 +106,29 @@ export default Vue.extend({
     });
   },
   methods: {
+    testConverter() {
+      console.log(this.playableMaze.mazeMap);
+      let defaultMapSize: number = this.playableMaze.checkMazeMapSize();
+      let max: number = this.playableMaze.height - 1;
+      let optimizedMap = mazeConverter.toFireStoreMazeMap(
+        this.playableMaze.mazeMap,
+        max
+      );
+      this.playableMaze.mazeMap = optimizedMap;
+      let optimizedMapSize = this.playableMaze.checkMazeMapSize();
+      console.log(
+        "with height and with of",
+        this.mazeSize,
+        "default size:",
+        defaultMapSize,
+        "new:",
+        optimizedMapSize
+      );
+      this.playableMaze.mazeMap = mazeConverter.fromFireStoreMazeMap(
+        optimizedMap,
+        max
+      );
+    },
     async joinMazeSession(gameId: string) {
       let gameReady = {
         mazeReady: false,
@@ -139,7 +144,6 @@ export default Vue.extend({
       await this.getMazeData(gameId)
         .then((mazeDataResult: firebaseMaze) => {
           this.setMaze(mazeDataResult, gameId);
-          console.log(mazeDataResult.mazeMap);
           gameReady.mazeReady = true;
         })
         .catch(err => {
@@ -217,12 +221,13 @@ export default Vue.extend({
       await newAccount.makeAnonymousAccount().then(res => {});
     },
     async generateMazeSession() {
-      if (this.mazeSize > 0 && this.mazeSize < 17) {
+      if (this.mazeSize > 0 && this.mazeSize < 19) {
         this.dataReady = false;
         let players: Array<Player> = [];
         let mazeId: string = "";
         let newMaze = new firebaseMaze(players, mazeId);
         newMaze.generateMaze(1, this.mazeSize, this.mazeSize);
+
         await store
           .dispatch("makeGameSession", newMaze)
           .then(async mazeDataDoc => {

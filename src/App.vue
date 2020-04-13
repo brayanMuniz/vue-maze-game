@@ -63,7 +63,7 @@ import accountStore, {
 } from "@/storeModules/accountStore";
 import moment from "moment";
 import { mazeConverter } from "./converters";
-import { Graph } from "@/classes/Graph";
+import { Graph, nodes } from "@/classes/Graph";
 // ! Strange Err:
 // ! Whenever I use the converters it affects the playable maze
 export default Vue.extend({
@@ -73,7 +73,7 @@ export default Vue.extend({
       localSession: true,
       dataReady: false,
       playableMaze: new firebaseMaze([], ""),
-      mazeSize: 6,
+      mazeSize: 23, // its height X width
       startPostion: String(),
       players: Array<Player>(),
       sessionId: String(),
@@ -92,7 +92,7 @@ export default Vue.extend({
         this.myAccountId = this.myAccount.returnUid();
         store.commit("accountStore/setMyUid", user.uid);
         if (this.localSession === false) {
-          // DB would crash at around 600 mazeSize
+          // DB would crash at around 600 mazeSize, not accounting for keys
           // 17: oA8nRJLR2Jprgek9xpEM, crashes at 18: l8pcnORsDp1dP6kyBUhc
           let testSessionId: string = "oA8nRJLR2Jprgek9xpEM";
           await this.joinMazeSession(testSessionId);
@@ -117,6 +117,13 @@ export default Vue.extend({
       );
       this.playableMaze.mazeMap = optimizedMap;
       let optimizedMapSize = this.playableMaze.checkMazeMapSize();
+      this.playableMaze.mazeMap = mazeConverter.fromFireStoreMazeMap(
+        optimizedMap,
+        max
+      );
+      let testGraph: Graph = new Graph(this.playableMaze);
+      let graphMap: nodes = testGraph.convertMazeToGraph();
+      console.log("Graph is: ", graphMap);
       console.log(
         "height, width:",
         this.mazeSize,
@@ -125,12 +132,7 @@ export default Vue.extend({
         "new:",
         optimizedMapSize
       );
-      this.playableMaze.mazeMap = mazeConverter.fromFireStoreMazeMap(
-        optimizedMap,
-        max
-      );
-      let testGraph: Graph = new Graph(this.playableMaze);
-      console.log("Graph is: ", testGraph.convertMazeToGraph());
+      console.log("Graph size if correct,", testGraph.checkGraphSize(graphMap));
     },
     async joinMazeSession(gameId: string) {
       let gameReady = {
@@ -368,5 +370,5 @@ export default Vue.extend({
   background-color: lightcoral;
 }
 
-$grid-columns: 40; // allows bootstrap to have rows and col up to 40 until breaking to new line
+$grid-columns: 69; // allows bootstrap to have rows and col up to 40 until breaking to new line
 </style>

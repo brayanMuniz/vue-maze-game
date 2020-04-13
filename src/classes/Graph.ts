@@ -5,9 +5,17 @@ import { Maze, mazeMap, mazeData } from "./Maze";
 
 export class Graph {
   mazeData: Maze;
-  //   graphData:
   constructor(mazeData: Maze) {
     this.mazeData = mazeData;
+  }
+
+  public checkGraphSize(graph: nodes): number {
+    let totalSize = 0;
+    // returns values and keys
+    for (let node in graph) {
+      totalSize += Object.values(graph[node]).length + 1;
+    }
+    return totalSize;
   }
 
   public convertMazeToGraph(): nodes {
@@ -19,10 +27,8 @@ export class Graph {
     let possibleDirections: Array<"N" | "S" | "E" | "W"> = ["N", "S", "E", "W"];
     let checkedPointsDirection: mazeMap = {};
     let checkedPoints: Array<string> = [];
-    // Todo: check for the finished pont, eliminate it going that way
-    // Ex: 6,9.S = 3 ... 6,6.N = 3 ... I just need one of them
-    // Can be done through a hash table called eliminated points, this case would be 6,6:S = false
-    let infiniteLoopPreventer: number = 200;
+    let infiniteLoopPreventer: number = 1000;
+
     while (pointsToCheck.length > 0 && infiniteLoopPreventer > 0) {
       let point: string = pointsToCheck[0];
       let value = mazeMapData[point];
@@ -35,7 +41,7 @@ export class Graph {
           W: 0
         };
       }
-      // Todo: when there is a point that has all values of 0, check the in betweens of the largest point direction for possible in betweens.
+
       if (!checkedPoints.includes(point))
         possibleDirections.forEach(direction => {
           if (this.isPointDirectionChecked(checkedPointsDirection, point, direction) === false) {
@@ -70,7 +76,6 @@ export class Graph {
               directionResult.vectorAmount > 0 &&
               !pointsToCheck.includes(directionResult.finishedPoint)
             ) {
-              console.log("Added point to check", directionResult.finishedPoint);
               pointsToCheck.push(directionResult.finishedPoint);
             }
           }
@@ -80,9 +85,19 @@ export class Graph {
       pointsToCheck.shift();
       infiniteLoopPreventer--;
     }
+
+    for (let node in graphData) {
+      if (graphData[node].N === 0) delete graphData[node].N;
+      if (graphData[node].S === 0) delete graphData[node].S;
+      if (graphData[node].E === 0) delete graphData[node].E;
+      if (graphData[node].W === 0) delete graphData[node].W;
+      if (Object.values(graphData[node]).length === 0) delete graphData[node];
+    }
+
     if (infiniteLoopPreventer > 0) {
       console.log("It works", infiniteLoopPreventer);
     }
+
     return graphData;
   }
 
@@ -147,7 +162,6 @@ export class Graph {
           vectorCheckResult.vectorAmount += 1;
           vectorCheckResult.finishedPoint = neighborPoint;
           if (vectorCheckResult.vectorAmount > 1) {
-            console.log(startPoint, direction, "There might be an in between ");
             let inBetweenPoints: Array<vector> = this.inBetweenHelper(
               mazeMapData,
               neighborPoint,
@@ -251,6 +265,9 @@ export class Graph {
 
   public convertGraphToMazeData(graph: nodes): mazeMap {
     let mazeMapData: mazeMap = {};
+    for (let node in graph) {
+      console.log(node);
+    }
     return mazeMapData;
   }
 }

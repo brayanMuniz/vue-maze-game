@@ -25,10 +25,7 @@ export class Maze {
       this.endPositions = fromFirestoreMazeData.endPositions;
       this.width = fromFirestoreMazeData.width;
       this.height = fromFirestoreMazeData.height;
-      this.mazeMap = mazeConverter.fromFireStoreMazeMap(
-        fromFirestoreMazeData.mazeMap,
-        this.width
-      );
+      this.mazeMap = mazeConverter.fromFireStoreMazeMap(fromFirestoreMazeData.mazeMap, this.width);
     }
   }
 
@@ -71,10 +68,7 @@ export class Maze {
         this.removeFromUnvisitedList(firstPoint);
         switchCounter = 0;
       }
-      let sideCell: string = this.getRandomNeighborCell(
-        leadingPoint,
-        this.unvisitedCells
-      );
+      let sideCell: string = this.getRandomNeighborCell(leadingPoint, this.unvisitedCells);
 
       if (sideCell !== leadingPoint) {
         this.removeWall(leadingPoint, sideCell);
@@ -101,17 +95,10 @@ export class Maze {
     return this.startPosition;
   }
 
-  private potentialNeighborHelper(
-    point: string,
-    playablePoints: Array<string>
-  ): Array<string> {
+  private potentialNeighborHelper(point: string, playablePoints: Array<string>): Array<string> {
     let deConstructedPoint = this.deConstructPoint(point);
     let potentialNeighbors = Object.values(
-      this.generatePlayableCells(
-        deConstructedPoint.x,
-        deConstructedPoint.y,
-        playablePoints
-      )
+      this.generatePlayableCells(deConstructedPoint.x, deConstructedPoint.y, playablePoints)
     );
     return potentialNeighbors;
   }
@@ -165,11 +152,7 @@ export class Maze {
     return point;
   }
 
-  private generatePlayableCells(
-    xPoint: number,
-    yPoint: number,
-    unvisitedCells: Array<string>
-  ): object {
+  private generatePlayableCells(xPoint: number, yPoint: number, unvisitedCells: Array<string>): object {
     let points: any = {};
     if (xPoint + 1 < this.width) {
       points["right"] = `${xPoint + 1},${yPoint}`;
@@ -201,9 +184,10 @@ export class Maze {
 
   public checkMazeMapSize(): number {
     let total: number = 0;
+    // adds keys and values
     for (let key in this.mazeMap) {
       let value = this.mazeMap[key];
-      total += Object.values(value).length;
+      total += Object.values(value).length + 1;
     }
     return total;
   }

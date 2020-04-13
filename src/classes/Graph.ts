@@ -17,37 +17,103 @@ export class Graph {
     let mazeMapData: mazeMap = this.mazeData.mazeMap;
     let pointsToCheck: Array<string> = [startPoint];
     let possibleDirections: Array<"N" | "S" | "E" | "W"> = ["N", "S", "E", "W"];
+    let checkedPointsDirection: mazeMap = {};
+    let checkedPoints: Array<string> = [];
     // Todo: check for the finished pont, eliminate it going that way
     // Ex: 6,9.S = 3 ... 6,6.N = 3 ... I just need one of them
-    // Can be done through a hash table called eliminated points, this case would be 6,6:
-    while (pointsToCheck.length > 0 && pointsToCheck.length < 3) {
+    // Can be done through a hash table called eliminated points, this case would be 6,6:S = false
+    let infiniteLoopPreventer: number = 200;
+    while (pointsToCheck.length > 0 && infiniteLoopPreventer > 0) {
       let point: string = pointsToCheck[0];
       let value = mazeMapData[point];
-      graphData[point] = {
-        N: 0,
-        S: 0,
-        E: 0,
-        W: 0
-      };
-      possibleDirections.forEach(direction => {
-        let directionResult = this.checkNodeDirectionAmount(value, direction, mazeMapData, point, max);
-        console.log(direction, directionResult);
-        graphData[point][direction] = directionResult.vectorAmount;
-        if (
-          directionResult.finishedPoint != point &&
-          !pointsToCheck.includes(directionResult.finishedPoint)
-        ) {
-          pointsToCheck.push(directionResult.finishedPoint);
-          console.log("Pushed ", directionResult.finishedPoint);
-        }
-      });
 
+      if (graphData[point] === undefined) {
+        graphData[point] = {
+          N: 0,
+          S: 0,
+          E: 0,
+          W: 0
+        };
+      }
+      if (!checkedPoints.includes(point))
+        possibleDirections.forEach(direction => {
+          if (this.isPointDirectionChecked(checkedPointsDirection, point, direction) === false) {
+            let directionResult = this.checkNodeDirectionAmount(
+              value,
+              direction,
+              mazeMapData,
+              point,
+              max
+            );
+            if (directionResult.finishedPoint != point) {
+              checkedPointsDirection = this.checkPointHelperAddition(
+                checkedPointsDirection,
+                directionResult.finishedPoint,
+                direction
+              );
+            }
+            console.log(checkedPointsDirection);
+            graphData[point][direction] = directionResult.vectorAmount;
+
+            if (
+              directionResult.vectorAmount > 0 &&
+              !pointsToCheck.includes(directionResult.finishedPoint)
+            ) {
+              console.log("Added point to check", directionResult.finishedPoint);
+              pointsToCheck.push(directionResult.finishedPoint);
+            }
+          } else {
+            console.log(
+              "Prevent point checking",
+              point,
+              direction,
+              this.isPointDirectionChecked(checkedPointsDirection, point, direction)
+            );
+          }
+        });
+      checkedPoints.push(point);
       pointsToCheck.shift();
+      infiniteLoopPreventer--;
+    }
+    if (infiniteLoopPreventer > 0) {
+      console.log("It works just need to check in betweens");
     }
     return graphData;
   }
 
-  public checkNodeDirectionAmount(
+  // Will ban opposite direction Given
+  private checkPointHelperAddition(
+    currentCheckedPoints: mazeMap,
+    point: string,
+    directionBan: "N" | "S" | "E" | "W"
+  ): mazeMap {
+    if (currentCheckedPoints[point] === undefined) {
+      currentCheckedPoints[point] = {
+        N: true,
+        E: true,
+        W: true,
+        S: true
+      };
+    }
+    // false means that it will not check that direction
+    if (directionBan == "N") currentCheckedPoints[point].S = false;
+    if (directionBan === "S") currentCheckedPoints[point].N = false;
+    if (directionBan === "E") currentCheckedPoints[point].W = false;
+    if (directionBan === "W") currentCheckedPoints[point].E = false;
+    return currentCheckedPoints;
+  }
+
+  private isPointDirectionChecked(
+    currentCheckedPoints: mazeMap,
+    point: string,
+    direction: "N" | "S" | "E" | "W"
+  ): boolean {
+    if (currentCheckedPoints[point] === undefined) return false;
+    if (currentCheckedPoints[point][direction] === undefined) return false;
+    return !currentCheckedPoints[point][direction];
+  }
+
+  private checkNodeDirectionAmount(
     value: any,
     direction: "N" | "S" | "E" | "W",
     mazeMapData: mazeMap,
@@ -77,7 +143,7 @@ export class Graph {
   }
 
   // Returns undefined if point DNE
-  public findNeighborPoint(
+  private findNeighborPoint(
     point: string,
     direction: "N" | "S" | "E" | "W",
     max: number

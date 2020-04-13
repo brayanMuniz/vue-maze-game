@@ -63,16 +63,17 @@ import accountStore, {
 } from "@/storeModules/accountStore";
 import moment from "moment";
 import { mazeConverter } from "./converters";
+import { Graph } from "@/classes/Graph";
 // ! Strange Err:
 // ! Whenever I use the converters it affects the playable maze
 export default Vue.extend({
   name: "app",
   data() {
     return {
-      localSession: false,
+      localSession: true,
       dataReady: false,
       playableMaze: new firebaseMaze([], ""),
-      mazeSize: 12,
+      mazeSize: 6,
       startPostion: String(),
       players: Array<Player>(),
       sessionId: String(),
@@ -117,7 +118,7 @@ export default Vue.extend({
       this.playableMaze.mazeMap = optimizedMap;
       let optimizedMapSize = this.playableMaze.checkMazeMapSize();
       console.log(
-        "with height and with of",
+        "height, width:",
         this.mazeSize,
         "default size:",
         defaultMapSize,
@@ -128,6 +129,8 @@ export default Vue.extend({
         optimizedMap,
         max
       );
+      let testGraph: Graph = new Graph(this.playableMaze);
+      console.log("Graph is: ", testGraph.convertMazeToGraph());
     },
     async joinMazeSession(gameId: string) {
       let gameReady = {

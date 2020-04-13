@@ -35,6 +35,7 @@ export class Graph {
           W: 0
         };
       }
+      // Todo: when there is a point that has all values of 0, check the in betweens of the largest point direction for possible in betweens.
       if (!checkedPoints.includes(point))
         possibleDirections.forEach(direction => {
           if (this.isPointDirectionChecked(checkedPointsDirection, point, direction) === false) {
@@ -45,6 +46,7 @@ export class Graph {
               point,
               max
             );
+
             if (directionResult.finishedPoint != point) {
               checkedPointsDirection = this.checkPointHelperAddition(
                 checkedPointsDirection,
@@ -52,7 +54,16 @@ export class Graph {
                 direction
               );
             }
-            console.log(checkedPointsDirection);
+            directionResult.inBetweenPoints.forEach(inBetweenPoint => {
+              checkedPointsDirection = this.checkPointHelperAddition(
+                checkedPointsDirection,
+                inBetweenPoint.point,
+                this.giveOppositeDirection(inBetweenPoint.directionOrigin)
+              );
+              console.log("Added inbetween ", inBetweenPoint.point, "UWU");
+              pointsToCheck.push(inBetweenPoint.point);
+            });
+
             graphData[point][direction] = directionResult.vectorAmount;
 
             if (
@@ -62,23 +73,25 @@ export class Graph {
               console.log("Added point to check", directionResult.finishedPoint);
               pointsToCheck.push(directionResult.finishedPoint);
             }
-          } else {
-            console.log(
-              "Prevent point checking",
-              point,
-              direction,
-              this.isPointDirectionChecked(checkedPointsDirection, point, direction)
-            );
           }
         });
+
       checkedPoints.push(point);
       pointsToCheck.shift();
       infiniteLoopPreventer--;
     }
     if (infiniteLoopPreventer > 0) {
-      console.log("It works just need to check in betweens");
+      console.log("It works", infiniteLoopPreventer);
     }
     return graphData;
+  }
+
+  private giveOppositeDirection(point: "N" | "S" | "E" | "W"): "N" | "S" | "E" | "W" {
+    if (point == "N") return "S";
+    if (point == "S") return "N";
+    if (point == "E") return "W";
+    if (point == "W") return "E";
+    return point;
   }
 
   // Will ban opposite direction Given
@@ -120,9 +133,10 @@ export class Graph {
     startPoint: string,
     max: number
   ) {
-    let vectorCheckResult = {
+    let vectorCheckResult: directionCheck = {
       vectorAmount: 0,
-      finishedPoint: startPoint
+      finishedPoint: startPoint,
+      inBetweenPoints: []
     };
 
     if (value[direction]) {
@@ -132,6 +146,19 @@ export class Graph {
         if (mazeMapData[neighborPoint][direction]) {
           vectorCheckResult.vectorAmount += 1;
           vectorCheckResult.finishedPoint = neighborPoint;
+          if (vectorCheckResult.vectorAmount > 1) {
+            console.log(startPoint, direction, "There might be an in between ");
+            let inBetweenPoints: Array<vector> = this.inBetweenHelper(
+              mazeMapData,
+              neighborPoint,
+              direction,
+              max
+            );
+            vectorCheckResult.inBetweenPoints = [
+              ...vectorCheckResult.inBetweenPoints,
+              ...inBetweenPoints
+            ];
+          }
           neighborPoint = this.findNeighborPoint(neighborPoint, direction, max);
         } else {
           vectorCheckResult.finishedPoint = neighborPoint;
@@ -140,6 +167,57 @@ export class Graph {
       }
     }
     return vectorCheckResult;
+  }
+
+  // If in N Or S, check W and E vice versa
+  private inBetweenHelper(
+    mazeMapData: mazeMap,
+    point: string,
+    direction: "N" | "S" | "E" | "W",
+    max: number
+  ): Array<vector> {
+    // possiblePoints should not be more than 2
+    let possiblePoints: Array<vector> = [];
+
+    if (direction === "N" || direction === "S") {
+      if (mazeMapData[point].E) {
+        let neighborPont = this.findNeighborPoint(point, "E", max);
+        if (neighborPont != undefined)
+          possiblePoints.push({
+            point: neighborPont,
+            directionOrigin: "W"
+          });
+      }
+      if (mazeMapData[point].W) {
+        let neighborPont = this.findNeighborPoint(point, "W", max);
+        if (neighborPont != undefined)
+          possiblePoints.push({
+            point: neighborPont,
+            directionOrigin: "E"
+          });
+      }
+    }
+
+    if (direction === "W" || direction === "E") {
+      if (mazeMapData[point].N) {
+        let neighborPont = this.findNeighborPoint(point, "N", max);
+        if (neighborPont != undefined)
+          possiblePoints.push({
+            point: neighborPont,
+            directionOrigin: "S"
+          });
+      }
+      if (mazeMapData[point].S) {
+        let neighborPont = this.findNeighborPoint(point, "S", max);
+        if (neighborPont != undefined)
+          possiblePoints.push({
+            point: neighborPont,
+            directionOrigin: "N"
+          });
+      }
+    }
+
+    return possiblePoints;
   }
 
   // Returns undefined if point DNE
@@ -175,6 +253,17 @@ export class Graph {
     let mazeMapData: mazeMap = {};
     return mazeMapData;
   }
+}
+
+interface vector {
+  point: string;
+  directionOrigin: "N" | "S" | "E" | "W";
+}
+
+interface directionCheck {
+  vectorAmount: number;
+  finishedPoint: string;
+  inBetweenPoints: Array<vector>;
 }
 
 export interface nodes {

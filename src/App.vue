@@ -56,7 +56,7 @@ import {
   playerSnapshot,
   playingValue
 } from "./storeModules/fbPlayer";
-import { Maze, mazeMap } from "./classes/Maze";
+import { Maze, mazeMap, mazeData } from "./classes/Maze";
 import { firebaseMaze } from "./classes/DBMaze";
 import accountStore, {
   accountMutationsSchema
@@ -73,7 +73,7 @@ export default Vue.extend({
       localSession: true,
       dataReady: false,
       playableMaze: new firebaseMaze([], ""),
-      mazeSize: 23, // its height X width
+      mazeSize: 10, // its height X width
       startPostion: String(),
       players: Array<Player>(),
       sessionId: String(),
@@ -132,7 +132,13 @@ export default Vue.extend({
         "new:",
         optimizedMapSize
       );
+      let convertedBackIntoMaze: mazeMap = testGraph.convertGraphToMazeData(
+        graphMap,
+        max
+      );
+      console.log(convertedBackIntoMaze);
       console.log("Graph size if correct,", testGraph.checkGraphSize(graphMap));
+      this.playableMaze.mazeMap = convertedBackIntoMaze;
     },
     async joinMazeSession(gameId: string) {
       let gameReady = {

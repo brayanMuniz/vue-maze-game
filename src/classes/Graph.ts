@@ -263,10 +263,44 @@ export class Graph {
     return neighbor;
   }
 
-  public convertGraphToMazeData(graph: nodes): mazeMap {
+  public convertGraphToMazeData(graph: nodes, mazeSize: number): mazeMap {
     let mazeMapData: mazeMap = {};
-    for (let node in graph) {
-      console.log(node);
+    for (let x = mazeSize; x >= 0; x--) {
+      for (let y = mazeSize; y >= 0; y--) {
+        let point: string = `${x},${y}`;
+        mazeMapData[point] = {
+          N: false,
+          S: false,
+          E: false,
+          W: false
+        };
+      }
+    }
+
+    let directionOptions: Array<"N" | "S" | "E" | "W"> = ["N", "S", "E", "W"];
+    for (let nodePoint in graph) {
+      directionOptions.forEach(direction => {
+        if (graph[nodePoint][direction] != undefined) {
+          let amountToMove: number = graph[nodePoint][direction];
+          let firstPointToMove: string = nodePoint;
+
+          for (amountToMove; amountToMove > 0; amountToMove--) {
+            mazeMapData[firstPointToMove][direction] = true;
+
+            let neighborPoint: string | undefined = this.findNeighborPoint(
+              firstPointToMove,
+              direction,
+              mazeSize
+            );
+
+            if (neighborPoint != undefined) {
+              console.log("Setting ", neighborPoint, this.giveOppositeDirection(direction));
+              mazeMapData[neighborPoint][this.giveOppositeDirection(direction)] = true;
+              firstPointToMove = neighborPoint;
+            }
+          }
+        }
+      });
     }
     return mazeMapData;
   }

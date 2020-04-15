@@ -39,6 +39,7 @@
 
     <div class="container-fluid mt-2 mx-2" v-if="dataReady">
       <mazeComponent :playableMaze="playableMaze" :playerCountLimit="Number(playerCountLimit)" />
+      <br />
     </div>
   </div>
 </template>
@@ -73,7 +74,8 @@ export default Vue.extend({
       localSession: true,
       dataReady: false,
       playableMaze: new firebaseMaze([], ""),
-      mazeSize: 10, // its height X width
+      graphMaze: new firebaseMaze([], ""),
+      mazeSize: 20, // its height X width
       startPostion: String(),
       players: Array<Player>(),
       sessionId: String(),
@@ -98,47 +100,59 @@ export default Vue.extend({
           await this.joinMazeSession(testSessionId);
         } else {
           this.makeLocalSession(1, this.mazeSize, this.mazeSize); //! only works if height and width are the same
-          this.testConverter();
           this.dataReady = true;
         }
       } else {
         alert("Make account to play");
       }
+      this.testConverter();
     });
   },
   methods: {
     testConverter() {
-      console.log(this.playableMaze.mazeMap);
+      let ogMap = this.playableMaze.getMazeMap(); // ! if you modify ogMap, it changes playableMaze
+      console.log("OG map:", ogMap);
       let defaultMapSize: number = this.playableMaze.checkMazeMapSize();
       let max: number = this.playableMaze.height - 1;
-      let optimizedMap = mazeConverter.toFireStoreMazeMap(
-        this.playableMaze.mazeMap,
-        max
-      );
-      this.playableMaze.mazeMap = optimizedMap;
-      let optimizedMapSize = this.playableMaze.checkMazeMapSize();
-      this.playableMaze.mazeMap = mazeConverter.fromFireStoreMazeMap(
-        optimizedMap,
-        max
-      );
       let testGraph: Graph = new Graph(this.playableMaze);
       let graphMap: nodes = testGraph.convertMazeToGraph();
+      let convertedBackIntoMaze: mazeMap = testGraph.convertGraphToMazeData(
+        graphMap,
+        max
+      );
       console.log("Graph is: ", graphMap);
       console.log(
         "height, width:",
         this.mazeSize,
         "default size:",
         defaultMapSize,
-        "new:",
-        optimizedMapSize
+        "graphSize: ",
+        testGraph.checkGraphSize(graphMap)
       );
-      let convertedBackIntoMaze: mazeMap = testGraph.convertGraphToMazeData(
-        graphMap,
-        max
-      );
-      console.log(convertedBackIntoMaze);
-      console.log("Graph size if correct,", testGraph.checkGraphSize(graphMap));
-      this.playableMaze.mazeMap = convertedBackIntoMaze;
+
+      let direction: Array<"N" | "S" | "E" | "W"> = ["N", "S", "E", "W"];
+      let errros: Array<any> = [];
+      for (let point in convertedBackIntoMaze) {
+        direction.forEach(direction => {
+          if (
+            convertedBackIntoMaze[point][direction] != ogMap[point][direction]
+          ) {
+            console.log(
+              point,
+              direction,
+              "supposed to be ",
+              ogMap[point][direction]
+            );
+            errros.push({
+              point,
+              direction,
+              supposedToBe: ogMap[point][direction]
+            });
+          }
+        });
+      }
+      if (errros.length > 1) console.error(errros);
+      else this.playableMaze.mazeMap = convertedBackIntoMaze;
     },
     async joinMazeSession(gameId: string) {
       let gameReady = {

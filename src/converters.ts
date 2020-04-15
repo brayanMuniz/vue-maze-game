@@ -15,7 +15,7 @@ export let playerConverter = {
       currentPosition: player.currentPosition,
       accountId: player.accountId,
       lastPlayerMove: player.getLastMoveTimeSeconds(),
-      gameWon: player.wonGame
+      gameWon: player.wonGame,
     };
   },
   // this will be used later to join sessions
@@ -26,15 +26,11 @@ export let playerConverter = {
       firebasePlayerData.playerId,
       firebasePlayerData.lastMoveTime
     );
-  }
+  },
 };
 
 // Gives back point from a specified direction, Ex: (0,0), N => 0,1
-function findNeighborPoint(
-  point: string,
-  direction: "N" | "S" | "E" | "W",
-  max: number
-): string {
+function findNeighborPoint(point: string, direction: "N" | "S" | "E" | "W", max: number): string {
   let x: number = Number(point.split(",")[0]);
   let y: number = Number(point.split(",")[1]);
   let neighbor = point;
@@ -124,7 +120,7 @@ export let mazeConverter = {
           N: false,
           S: false,
           E: false,
-          W: false
+          W: false,
         };
       }
     }
@@ -157,12 +153,12 @@ export let mazeConverter = {
       endPositions: maze.endPositions,
       mazeMap: this.toFireStoreMazeMap(maze.mazeMap, maze.height - 1),
       width: maze.width,
-      height: maze.height
+      height: maze.height,
     };
   },
   // Todo: Fill in all the false values
   fromFireStore: function(firebaseMazeData: any, mazeId: string) {
     let players: Array<Player> = [];
     return new firebaseMaze(players, mazeId, firebaseMazeData);
-  }
+  },
 };

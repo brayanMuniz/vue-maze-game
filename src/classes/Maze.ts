@@ -51,7 +51,7 @@ export class Maze {
       if (switchCounter > 3) {
         let pointsToBranch = Array<string>();
         let pointToBranchOff = String();
-        visitedCells.forEach(point => {
+        visitedCells.forEach((point) => {
           if (pointsToBranch.length === 0) {
             pointToBranchOff = point;
             pointsToBranch = this.potentialNeighborHelper(point, this.unvisitedCells);
@@ -89,6 +89,10 @@ export class Maze {
       alert("Maze BrOkEn");
     }
     this.generateSolutions(solutions);
+  }
+
+  public getMazeMap() {
+    return this.mazeMap;
   }
 
   public getStartPosition() {
@@ -132,7 +136,7 @@ export class Maze {
           N: false,
           S: false,
           E: false,
-          W: false
+          W: false,
         };
       }
     }
@@ -178,7 +182,7 @@ export class Maze {
   private deConstructPoint(point: string) {
     return {
       x: Number(point.split(",")[0]),
-      y: Number(point.split(",")[1])
+      y: Number(point.split(",")[1]),
     };
   }
 

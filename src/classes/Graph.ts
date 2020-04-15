@@ -38,12 +38,12 @@ export class Graph {
           N: 0,
           S: 0,
           E: 0,
-          W: 0
+          W: 0,
         };
       }
 
       if (!checkedPoints.includes(point))
-        possibleDirections.forEach(direction => {
+        possibleDirections.forEach((direction) => {
           if (this.isPointDirectionChecked(checkedPointsDirection, point, direction) === false) {
             let directionResult = this.checkNodeDirectionAmount(
               value,
@@ -60,13 +60,22 @@ export class Graph {
                 direction
               );
             }
-            directionResult.inBetweenPoints.forEach(inBetweenPoint => {
+
+            directionResult.inBetweenPoints.forEach((inBetweenPoint) => {
               checkedPointsDirection = this.checkPointHelperAddition(
                 checkedPointsDirection,
                 inBetweenPoint.point,
                 this.giveOppositeDirection(inBetweenPoint.directionOrigin)
               );
-              console.log("Added inbetween ", inBetweenPoint.point, "UWU");
+              if (graphData[inBetweenPoint.point] === undefined) {
+                graphData[inBetweenPoint.point] = {
+                  N: 0,
+                  S: 0,
+                  E: 0,
+                  W: 0,
+                };
+              }
+              graphData[inBetweenPoint.point][inBetweenPoint.directionOrigin] = 1;
               pointsToCheck.push(inBetweenPoint.point);
             });
 
@@ -106,6 +115,7 @@ export class Graph {
     if (point == "S") return "N";
     if (point == "E") return "W";
     if (point == "W") return "E";
+    console.error(point);
     return point;
   }
 
@@ -120,7 +130,7 @@ export class Graph {
         N: true,
         E: true,
         W: true,
-        S: true
+        S: true,
       };
     }
     // false means that it will not check that direction
@@ -151,7 +161,7 @@ export class Graph {
     let vectorCheckResult: directionCheck = {
       vectorAmount: 0,
       finishedPoint: startPoint,
-      inBetweenPoints: []
+      inBetweenPoints: [],
     };
 
     if (value[direction]) {
@@ -170,7 +180,7 @@ export class Graph {
             );
             vectorCheckResult.inBetweenPoints = [
               ...vectorCheckResult.inBetweenPoints,
-              ...inBetweenPoints
+              ...inBetweenPoints,
             ];
           }
           neighborPoint = this.findNeighborPoint(neighborPoint, direction, max);
@@ -199,7 +209,7 @@ export class Graph {
         if (neighborPont != undefined)
           possiblePoints.push({
             point: neighborPont,
-            directionOrigin: "W"
+            directionOrigin: "W",
           });
       }
       if (mazeMapData[point].W) {
@@ -207,7 +217,7 @@ export class Graph {
         if (neighborPont != undefined)
           possiblePoints.push({
             point: neighborPont,
-            directionOrigin: "E"
+            directionOrigin: "E",
           });
       }
     }
@@ -218,7 +228,7 @@ export class Graph {
         if (neighborPont != undefined)
           possiblePoints.push({
             point: neighborPont,
-            directionOrigin: "S"
+            directionOrigin: "S",
           });
       }
       if (mazeMapData[point].S) {
@@ -226,11 +236,10 @@ export class Graph {
         if (neighborPont != undefined)
           possiblePoints.push({
             point: neighborPont,
-            directionOrigin: "N"
+            directionOrigin: "N",
           });
       }
     }
-
     return possiblePoints;
   }
 
@@ -272,14 +281,15 @@ export class Graph {
           N: false,
           S: false,
           E: false,
-          W: false
+          W: false,
         };
       }
     }
 
     let directionOptions: Array<"N" | "S" | "E" | "W"> = ["N", "S", "E", "W"];
+
     for (let nodePoint in graph) {
-      directionOptions.forEach(direction => {
+      directionOptions.forEach((direction) => {
         if (graph[nodePoint][direction] != undefined) {
           let amountToMove: number = graph[nodePoint][direction];
           let firstPointToMove: string = nodePoint;
@@ -294,7 +304,6 @@ export class Graph {
             );
 
             if (neighborPoint != undefined) {
-              console.log("Setting ", neighborPoint, this.giveOppositeDirection(direction));
               mazeMapData[neighborPoint][this.giveOppositeDirection(direction)] = true;
               firstPointToMove = neighborPoint;
             }

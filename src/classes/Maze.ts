@@ -1,10 +1,11 @@
 import { Player } from "./Player";
 import { mazeConverter } from "@/converters";
+import { nodes } from "./Graph";
 export class Maze {
   solutions: number;
   startPosition: string;
   endPositions: Array<string>;
-  mazeMap: mazeMap;
+  mazeMap: mazeMap | nodes;
   width: number;
   height: number;
   private unvisitedCells: Array<string>;

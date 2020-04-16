@@ -71,11 +71,11 @@ export default Vue.extend({
   name: "app",
   data() {
     return {
-      localSession: true,
+      localSession: false,
       dataReady: false,
       playableMaze: new firebaseMaze([], ""),
       graphMaze: new firebaseMaze([], ""),
-      mazeSize: 20, // its height X width
+      mazeSize: 10,
       startPostion: String(),
       players: Array<Player>(),
       sessionId: String(),
@@ -94,9 +94,9 @@ export default Vue.extend({
         this.myAccountId = this.myAccount.returnUid();
         store.commit("accountStore/setMyUid", user.uid);
         if (this.localSession === false) {
-          // DB would crash at around 600 mazeSize, not accounting for keys
-          // 17: oA8nRJLR2Jprgek9xpEM, crashes at 18: l8pcnORsDp1dP6kyBUhc
-          let testSessionId: string = "oA8nRJLR2Jprgek9xpEM";
+          // graph size of 10: PdoTttU5JflckzXJsafX,
+           //! breaks: 11: WyTUPIVejlxdWhuCT26C, 12: gOv43WQQyEl4WAl6G72O, 13: xCDNvSHjpOfb2qU0KZ0D, 16: kEokA6rvrRZwOKBtdeV1
+          let testSessionId: string = "PdoTttU5JflckzXJsafX";
           await this.joinMazeSession(testSessionId);
         } else {
           this.makeLocalSession(1, this.mazeSize, this.mazeSize); //! only works if height and width are the same
@@ -105,55 +105,9 @@ export default Vue.extend({
       } else {
         alert("Make account to play");
       }
-      this.testConverter();
     });
   },
   methods: {
-    testConverter() {
-      let ogMap = this.playableMaze.getMazeMap(); // ! if you modify ogMap, it changes playableMaze
-      console.log("OG map:", ogMap);
-      let defaultMapSize: number = this.playableMaze.checkMazeMapSize();
-      let max: number = this.playableMaze.height - 1;
-      let testGraph: Graph = new Graph(this.playableMaze);
-      let graphMap: nodes = testGraph.convertMazeToGraph();
-      let convertedBackIntoMaze: mazeMap = testGraph.convertGraphToMazeData(
-        graphMap,
-        max
-      );
-      console.log("Graph is: ", graphMap);
-      console.log(
-        "height, width:",
-        this.mazeSize,
-        "default size:",
-        defaultMapSize,
-        "graphSize: ",
-        testGraph.checkGraphSize(graphMap)
-      );
-
-      let direction: Array<"N" | "S" | "E" | "W"> = ["N", "S", "E", "W"];
-      let errros: Array<any> = [];
-      for (let point in convertedBackIntoMaze) {
-        direction.forEach(direction => {
-          if (
-            convertedBackIntoMaze[point][direction] != ogMap[point][direction]
-          ) {
-            console.log(
-              point,
-              direction,
-              "supposed to be ",
-              ogMap[point][direction]
-            );
-            errros.push({
-              point,
-              direction,
-              supposedToBe: ogMap[point][direction]
-            });
-          }
-        });
-      }
-      if (errros.length > 1) console.error(errros);
-      else this.playableMaze.mazeMap = convertedBackIntoMaze;
-    },
     async joinMazeSession(gameId: string) {
       let gameReady = {
         mazeReady: false,
@@ -169,6 +123,7 @@ export default Vue.extend({
       await this.getMazeData(gameId)
         .then((mazeDataResult: firebaseMaze) => {
           this.setMaze(mazeDataResult, gameId);
+          console.log(mazeDataResult);
           gameReady.mazeReady = true;
         })
         .catch(err => {
@@ -390,5 +345,5 @@ export default Vue.extend({
   background-color: lightcoral;
 }
 
-$grid-columns: 69; // allows bootstrap to have rows and col up to 40 until breaking to new line
+$grid-columns: 100; // allows bootstrap to have rows and col up to 40 until breaking to new line
 </style>

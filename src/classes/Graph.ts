@@ -4,9 +4,9 @@
 import { Maze, mazeMap, mazeData } from "./Maze";
 
 export class Graph {
-  mazeData: Maze;
-  constructor(mazeData: Maze) {
-    this.mazeData = mazeData;
+  mazeData?: Maze;
+  constructor(mazeData?: Maze) {
+    if (mazeData != undefined) this.mazeData = mazeData;
   }
 
   public checkGraphSize(graph: nodes): number {

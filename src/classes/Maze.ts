@@ -1,11 +1,10 @@
 import { Player } from "./Player";
 import { mazeConverter } from "@/converters";
-import { nodes } from "./Graph";
 export class Maze {
   solutions: number;
   startPosition: string;
   endPositions: Array<string>;
-  mazeMap: mazeMap | nodes;
+  mazeMap: mazeMap;
   width: number;
   height: number;
   private unvisitedCells: Array<string>;
@@ -26,7 +25,7 @@ export class Maze {
       this.endPositions = fromFirestoreMazeData.endPositions;
       this.width = fromFirestoreMazeData.width;
       this.height = fromFirestoreMazeData.height;
-      this.mazeMap = mazeConverter.fromFireStoreMazeMap(fromFirestoreMazeData.mazeMap, this.width);
+      this.mazeMap = fromFirestoreMazeData.mazeMap;
     }
   }
 
@@ -217,11 +216,11 @@ export class Maze {
 }
 
 export interface mazeData {
-  solutions: number;
+  solutions: number; // Todo: remove this
   startPosition: string;
   endPositions: Array<string>;
   mazeMap: mazeMap;
-  width: number;
+  width: number; // Todo: have it as one size, mazes will be squared
   height: number;
 }
 

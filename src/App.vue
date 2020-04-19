@@ -39,7 +39,6 @@
 
     <div class="container-fluid mt-2 mx-2" v-if="dataReady">
       <mazeComponent :playableMaze="playableMaze" :playerCountLimit="Number(playerCountLimit)" />
-      <br />
     </div>
   </div>
 </template>
@@ -75,7 +74,7 @@ export default Vue.extend({
       dataReady: false,
       playableMaze: new firebaseMaze([], ""),
       graphMaze: new firebaseMaze([], ""),
-      mazeSize: 10,
+      mazeSize: 20,
       startPostion: String(),
       players: Array<Player>(),
       sessionId: String(),
@@ -94,9 +93,18 @@ export default Vue.extend({
         this.myAccountId = this.myAccount.returnUid();
         store.commit("accountStore/setMyUid", user.uid);
         if (this.localSession === false) {
-          // graph size of 10: PdoTttU5JflckzXJsafX,
-           //! breaks: 11: WyTUPIVejlxdWhuCT26C, 12: gOv43WQQyEl4WAl6G72O, 13: xCDNvSHjpOfb2qU0KZ0D, 16: kEokA6rvrRZwOKBtdeV1
-          let testSessionId: string = "PdoTttU5JflckzXJsafX";
+          let mazeSizes = {
+            10: "PdoTttU5JflckzXJsafX",
+            11: "WyTUPIVejlxdWhuCT26C",
+            12: "gOv43WQQyEl4WAl6G72O",
+            13: "xCDNvSHjpOfb2qU0KZ0D",
+            16: "kEokA6rvrRZwOKBtdeV1",
+            21: "9xG9AzPnMgXjGQX2faWw",
+            29: "Dsl0AaTcy0tAMuHH6hp0",
+            35: "9fLkLG3OOG4wrhMQsMPy",
+            49: "pD7P3cQxopnU6tOgccbS" //! broken
+          };
+          let testSessionId: string = mazeSizes[35];
           await this.joinMazeSession(testSessionId);
         } else {
           this.makeLocalSession(1, this.mazeSize, this.mazeSize); //! only works if height and width are the same
@@ -123,7 +131,7 @@ export default Vue.extend({
       await this.getMazeData(gameId)
         .then((mazeDataResult: firebaseMaze) => {
           this.setMaze(mazeDataResult, gameId);
-          console.log(mazeDataResult);
+          console.log(mazeDataResult.mazeMap);
           gameReady.mazeReady = true;
         })
         .catch(err => {
@@ -201,7 +209,7 @@ export default Vue.extend({
       await newAccount.makeAnonymousAccount().then(res => {});
     },
     async generateMazeSession() {
-      if (this.mazeSize > 0 && this.mazeSize < 19) {
+      if (this.mazeSize > 0 && this.mazeSize < 50) {
         this.dataReady = false;
         let players: Array<Player> = [];
         let mazeId: string = "";

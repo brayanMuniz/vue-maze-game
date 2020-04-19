@@ -1,9 +1,10 @@
 <template>
   <div v-if="dataReady">
-    <div class="row" v-for="row in playableMaze.width" :key="row">
+    <!-- Todo: this part is broken  -->
+    <div class="row" v-for="row in mazeSize" :key="row">
       <div
         class="col-sm m-0 p-0 border-dark"
-        v-for="col in playableMaze.height"
+        v-for="col in mazeSize"
         :class="generateCellClasses(row, col)"
         :key="col"
       >
@@ -48,17 +49,16 @@ export default Vue.extend({
     return {
       dataReady: false,
       tempRow: Number(),
-      playerMoveTimeCount: 0
+      playerMoveTimeCount: 0,
+      mazeSize: Number(this.playableMaze.width)
     };
   },
   mounted() {
-    this.tempRow = this.playableMaze.height - 1;
+    this.tempRow = this.mazeSize - 1;
     this.dataReady = true;
   },
   methods: {
     generateCellClasses(x: number, y: number) {
-      // Todo: use the get neighbor function to cross reference points to see if it has a true value
-      // Example: lets say this is point 0,0 and N is not in there, but 0,1 South might have it as true, so check that neighbor
       let correctPoint: string = this.showCorrectPoint(x, y);
       let allClasses: any = {
         "border-top": !this.playableMaze.mazeMap[correctPoint].N,
@@ -75,7 +75,8 @@ export default Vue.extend({
       return allClasses;
     },
     showCorrectPoint(row: number, col: number): string {
-      return `${col - 1},${Math.abs(row - 1 - this.tempRow)}`;
+      // row and col will always be > 1
+      return `${col - 1},${Math.abs(Number(row - 1 - this.tempRow))}`;
     },
     showPlayer(formatedpoint: string, listOfPLayers: Array<Player>): boolean {
       let playerInPoint: boolean = false;

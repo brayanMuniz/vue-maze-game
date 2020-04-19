@@ -3,11 +3,7 @@ import { Player } from "./Player";
 export class firebaseMaze extends Maze {
   players: Array<Player>;
   mazeId: string;
-  constructor(
-    listOfPLayers: Array<Player>,
-    mazeId: string,
-    firestoreMazeData?: mazeData
-  ) {
+  constructor(listOfPLayers: Array<Player>, mazeId: string, firestoreMazeData?: mazeData) {
     super(firestoreMazeData);
     this.players = listOfPLayers;
     this.mazeId = mazeId;
@@ -15,7 +11,7 @@ export class firebaseMaze extends Maze {
 
   public getPlayerByDoc(playerDoc: string): Player | undefined {
     let selectedPlayer: Player | undefined = undefined;
-    this.players.forEach(player => {
+    this.players.forEach((player) => {
       if (player.documentId == playerDoc) {
         selectedPlayer = player;
       }
@@ -25,7 +21,7 @@ export class firebaseMaze extends Maze {
 
   public checkIfPlayerInGame(playerUid: string): boolean {
     let inGame: boolean = false;
-    this.players.forEach(player => {
+    this.players.forEach((player) => {
       if (player.getAccountId() == playerUid) {
         inGame = true;
       }
@@ -35,7 +31,7 @@ export class firebaseMaze extends Maze {
 
   public getDocIdOnAccountId(accountId: string): string | undefined {
     let documentId: string | undefined = undefined;
-    this.players.forEach(player => {
+    this.players.forEach((player) => {
       if (player.getAccountId() == accountId) {
         documentId = player.getDocumentId();
       }
@@ -61,7 +57,7 @@ export class firebaseMaze extends Maze {
 
   public getPLayerPosition(docId: string): string {
     let currentPosition: string = "";
-    this.players.forEach(player => {
+    this.players.forEach((player) => {
       if (player.getDocumentId() === docId) {
         currentPosition = player.getCurrentPosition();
       }
@@ -73,13 +69,12 @@ export class firebaseMaze extends Maze {
   public updatePlayerName(documentId: string, newName: string) {
     let selectedPlayer: Player | undefined = this.getPlayerByDoc(documentId);
     if (selectedPlayer != undefined) {
-      if (selectedPlayer.checkForChangeInName(newName))
-        selectedPlayer.updateName(newName);
+      if (selectedPlayer.checkForChangeInName(newName)) selectedPlayer.updateName(newName);
     }
   }
 
   public replacePlayerPosition(documentId: string, x: number, y: number) {
-    this.players.forEach(player => {
+    this.players.forEach((player) => {
       if (player.documentId === documentId) {
         player.replacePostion(x, y);
       }
@@ -88,7 +83,7 @@ export class firebaseMaze extends Maze {
 
   public movePLayer(documentId: string, x: number, y: number): string {
     let newCurrentPosition: string = "";
-    this.players.forEach(player => {
+    this.players.forEach((player) => {
       if (player.documentId === documentId) {
         player.updatePosition(x, y);
         newCurrentPosition = player.getCurrentPosition();
@@ -98,7 +93,6 @@ export class firebaseMaze extends Maze {
   }
 
   public checkPlayerMove(documentId: string, x: number, y: number): boolean {
-    let playerCanMove: boolean = false;
     let direction: "N" | "S" | "E" | "W" | undefined;
     let playerPosition: string = "";
     if (x == 1 && y == 0) {
@@ -111,16 +105,17 @@ export class firebaseMaze extends Maze {
       direction = "S";
     }
     if (direction != undefined) {
-      this.players.forEach(player => {
+      this.players.forEach((player) => {
         if (player.documentId == documentId) {
           playerPosition = player.getCurrentPosition();
         }
       });
-
-      playerCanMove = this.mazeMap[playerPosition][direction];
+      let result: number | boolean = this.mazeMap[playerPosition][direction];
+      if (typeof result == "number" && result > 1) return true;
+      if (typeof result == "boolean" && this.mazeMap[playerPosition][direction]) return true;
     }
 
-    return playerCanMove;
+    return false;
   }
 
   public replacePlayers(newPlayers: Array<Player>) {

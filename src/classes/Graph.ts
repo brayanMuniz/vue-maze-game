@@ -19,6 +19,10 @@ export class Graph {
   }
 
   public convertMazeToGraph(): nodes {
+    if (this.mazeData == undefined) {
+      console.error("Add mazeData");
+      return {};
+    }
     let graphData: nodes = {};
     let max: number = this.mazeData.height;
     let startPoint: string = this.mazeData.getStartPosition();
@@ -27,7 +31,7 @@ export class Graph {
     let possibleDirections: Array<"N" | "S" | "E" | "W"> = ["N", "S", "E", "W"];
     let checkedPointsDirection: mazeMap = {};
     let checkedPoints: Array<string> = [];
-    let infiniteLoopPreventer: number = 1000;
+    let infiniteLoopPreventer: number = 100000;
 
     while (pointsToCheck.length > 0 && infiniteLoopPreventer > 0) {
       let point: string = pointsToCheck[0];
@@ -105,8 +109,9 @@ export class Graph {
 
     if (infiniteLoopPreventer > 0) {
       console.log("It works", infiniteLoopPreventer);
+    } else {
+      console.log("Took too long", infiniteLoopPreventer);
     }
-
     return graphData;
   }
 

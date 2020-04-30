@@ -1,6 +1,5 @@
 <template>
-  <div v-if="dataReady">
-    <!-- Todo: this part is broken  -->
+  <div>
     <div class="row" v-for="row in mazeSize" :key="row">
       <div
         class="col-sm m-0 p-0 border-dark"
@@ -33,12 +32,15 @@
 </template>
 <script lang="ts">
 import Vue from "vue";
-import store from "@/store/store.ts";
 import playerComponent from "@/components/playerComponent.vue";
-import { firebaseMaze } from "../classes/DBMaze";
-import { Player } from "../classes/Player";
-import { playerMove } from "../storeModules/fbPlayer";
 import moment from "moment";
+// Classes
+import { firebaseMaze } from "@/classes/DBMaze";
+import { Player } from "@/classes/Player";
+// Store
+import store from "@/store/store.ts";
+import { playerMove } from "@/storeModules/fbPlayer";
+
 export default Vue.extend({
   name: "mazeComponent",
   props: {
@@ -47,15 +49,10 @@ export default Vue.extend({
   },
   data() {
     return {
-      dataReady: false,
-      tempRow: Number(),
+      tempRow: Number(this.playableMaze.width - 1),
       playerMoveTimeCount: 0,
       mazeSize: Number(this.playableMaze.width)
     };
-  },
-  mounted() {
-    this.tempRow = this.mazeSize - 1;
-    this.dataReady = true;
   },
   methods: {
     generateCellClasses(x: number, y: number) {
@@ -75,7 +72,6 @@ export default Vue.extend({
       return allClasses;
     },
     showCorrectPoint(row: number, col: number): string {
-      // row and col will always be > 1
       return `${col - 1},${Math.abs(Number(row - 1 - this.tempRow))}`;
     },
     showPlayer(formatedpoint: string, listOfPLayers: Array<Player>): boolean {

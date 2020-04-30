@@ -1,8 +1,4 @@
-// Todo: I could also delte the whole maze and convert it to a graph
-// Todo: accept data from a maze, convert it to a graph, send it to database instead.
-
-import { Maze, mazeMap, mazeData } from "./Maze";
-
+import { Maze, mazeMap } from "./Maze";
 export class Graph {
   mazeData?: Maze;
   constructor(mazeData?: Maze) {

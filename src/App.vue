@@ -46,26 +46,29 @@
 <script lang="ts">
 import Vue from "vue";
 import bootstrap from "bootstrap";
-import store from "@/store/store.ts";
 import mazeComponent from "@/components/mazeComponent.vue";
+import moment from "moment";
+import { mazeConverter } from "@/converters";
+
+// Classes
 import { Account } from "@/classes/Account";
+import { Player } from "@/classes/Player";
+import { Graph, nodes } from "@/classes/Graph";
+import { Maze, mazeMap, mazeData } from "@/classes/Maze";
+import { firebaseMaze } from "@/classes/DBMaze";
+
 import { firebaseData } from "@/firebaseConfig.ts";
-import { Player } from "./classes/Player";
+// Store
+import store from "@/store/store.ts";
 import {
   playerGameSession,
   playerSnapshot,
   playingValue
-} from "./storeModules/fbPlayer";
-import { Maze, mazeMap, mazeData } from "./classes/Maze";
-import { firebaseMaze } from "./classes/DBMaze";
+} from "@/storeModules/fbPlayer";
 import accountStore, {
   accountMutationsSchema
 } from "@/storeModules/accountStore";
-import moment from "moment";
-import { mazeConverter } from "./converters";
-import { Graph, nodes } from "@/classes/Graph";
-// ! Strange Err:
-// ! Whenever I use the converters it affects the playable maze
+
 export default Vue.extend({
   name: "app",
   data() {
@@ -93,18 +96,7 @@ export default Vue.extend({
         this.myAccountId = this.myAccount.returnUid();
         store.commit("accountStore/setMyUid", user.uid);
         if (this.localSession === false) {
-          let mazeSizes = {
-            10: "PdoTttU5JflckzXJsafX",
-            11: "WyTUPIVejlxdWhuCT26C",
-            12: "gOv43WQQyEl4WAl6G72O",
-            13: "xCDNvSHjpOfb2qU0KZ0D",
-            16: "kEokA6rvrRZwOKBtdeV1",
-            21: "9xG9AzPnMgXjGQX2faWw",
-            29: "Dsl0AaTcy0tAMuHH6hp0",
-            35: "9fLkLG3OOG4wrhMQsMPy",
-            49: "pD7P3cQxopnU6tOgccbS" //! broken
-          };
-          let testSessionId: string = mazeSizes[35];
+          let testSessionId: string = "xCDNvSHjpOfb2qU0KZ0D";
           await this.joinMazeSession(testSessionId);
         } else {
           this.makeLocalSession(1, this.mazeSize, this.mazeSize); //! only works if height and width are the same
@@ -226,7 +218,7 @@ export default Vue.extend({
             alert("not able to make new maze");
           });
       } else {
-        alert("Lol lower that number fam.");
+        alert("Lower that number.");
       }
     },
     async getMazeData(sessionId: string) {
@@ -341,17 +333,10 @@ export default Vue.extend({
     mazeComponent
   }
 });
-</script>
+</script> 
   
 <style lang="scss">
 @import "~bootstrap/scss/bootstrap";
-.startPoint {
-  background-color: lightblue;
-}
-
-.endPoint {
-  background-color: lightcoral;
-}
 
 $grid-columns: 100; // allows bootstrap to have rows and col up to 40 until breaking to new line
 </style>

@@ -13,26 +13,26 @@
   </div>
 </template>
 <script lang="ts">
-// Todo: make localSession a global state variable to not get weird bugs
 import Vue from "vue";
-import store from "@/store/store.ts";
-import { firebaseMaze } from "../classes/DBMaze";
-import { Player } from "../classes/Player";
-import { playerMove } from "../storeModules/fbPlayer";
 import moment from "moment";
+// Store
+import store from "@/store/store.ts";
+import { playerMove } from "@/storeModules/fbPlayer";
+// Classes
+import { firebaseMaze } from "@/classes/DBMaze";
+import { Player } from "@/classes/Player";
+
 export default Vue.extend({
   name: "playerComponent",
   directives: {
     focus: {
       inserted: (el, binding, vnode) => {
-        // Global "this" does not work here: so use vnode
         if (vnode.context) {
           let currentMaze: firebaseMaze = store.getters.getCurrentMaze;
           let myDocId = store.getters["accountStore/getMyDocId"];
           let myCurrentPosition: string = currentMaze.getPLayerPosition(
             myDocId
           );
-          // if the binding value of input is the same value as your current player FOCUS
           if (binding.value === myCurrentPosition) {
             el.focus();
           }
@@ -44,19 +44,6 @@ export default Vue.extend({
     playerCountLimit: Number,
     player: Object,
     gameId: String
-  },
-  watch: {
-    player: {
-      handler(val) {
-        console.log(val);
-        // if (this.player.checkForChangeInName(val.playerName)) {
-        //   this.playerName = val.playerName;
-        // } else {
-        //   console.log("hmm");
-        // }
-      },
-      deep: true
-    }
   },
   data() {
     return {

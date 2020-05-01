@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="container">
     <div class="row" v-for="row in mazeSize" :key="row">
       <div
         class="col-sm m-0 p-0 border-dark"

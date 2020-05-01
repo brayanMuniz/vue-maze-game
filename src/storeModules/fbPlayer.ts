@@ -38,7 +38,7 @@ const mutations: MutationTree<any> = {
   },
 };
 // Todo: there is a lot of repetition with referencing the player doc. Make a state of where the player is in the db
-// Todo: At least make an interface that forces the relative path and adds optional parameters to specify which one you are going to use. 
+// Todo: At least make an interface that forces the relative path and adds optional parameters to specify which one you are going to use.
 const actions: ActionTree<any, any> = {
   async addPlayerToSession({ commit }, payload: playerGameSession) {
     let mazePlayerSubCollection = firebaseData
@@ -46,9 +46,7 @@ const actions: ActionTree<any, any> = {
       .collection(dbSchema.gameSessions)
       .doc(payload.gameId)
       .collection(dbSchema.players);
-    return await mazePlayerSubCollection.add(
-      playerConverter.toFireStore(payload.player)
-    );
+    return await mazePlayerSubCollection.add(playerConverter.toFireStore(payload.player));
   },
   async getPlayerData({ commit }, gameId: string) {
     return await firebaseData
@@ -58,11 +56,11 @@ const actions: ActionTree<any, any> = {
       .collection(dbSchema.players)
       .get();
   },
-  async subscribeToPlayerMoves({ commit }, payload: any) {
+  async subscribeToPlayerMoves({ commit }, gameId: string) {
     return await firebaseData
       .firestore()
       .collection(dbSchema.gameSessions)
-      .doc(payload.gameId)
+      .doc(gameId)
       .collection(dbSchema.players);
   },
   async sendPlayerMove({ commit }, payload: playerMove) {
@@ -120,7 +118,7 @@ const actions: ActionTree<any, any> = {
       .doc(payload.gameId)
       .collection(dbSchema.players)
       .doc(payload.playerId);
-    commit('updateGameWon', true)
+    commit("updateGameWon", true);
     return playerDoc.update({
       wonGame: true,
     });

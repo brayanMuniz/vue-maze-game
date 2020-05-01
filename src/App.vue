@@ -96,8 +96,8 @@ export default Vue.extend({
         this.myAccountId = this.myAccount.returnUid();
         store.commit("accountStore/setMyUid", user.uid);
         if (this.localSession === false) {
-          let testSessionId: string = "xCDNvSHjpOfb2qU0KZ0D";
-          await this.joinMazeSession(testSessionId);
+          let defaultSessionId: string = "xCDNvSHjpOfb2qU0KZ0D";
+          await this.joinMazeSession(defaultSessionId);
         } else {
           this.makeLocalSession(1, this.mazeSize, this.mazeSize); //! only works if height and width are the same
           this.dataReady = true;
@@ -109,6 +109,7 @@ export default Vue.extend({
   },
   methods: {
     async joinMazeSession(gameId: string) {
+      console.log(gameId);
       let gameReady = {
         mazeReady: false,
         playerDataReady: false,
@@ -120,7 +121,9 @@ export default Vue.extend({
           return allOk;
         }
       };
-      await this.getMazeData(gameId)
+
+      await store
+        .dispatch("getMazeDataOnce", gameId)
         .then((mazeDataResult: firebaseMaze) => {
           this.setMaze(mazeDataResult, gameId);
           console.log(mazeDataResult.mazeMap);
@@ -131,7 +134,8 @@ export default Vue.extend({
           gameReady.mazeReady = false;
         });
 
-      await this.listenPlayerMoves(gameId)
+      await store
+        .dispatch("subscribeToPlayerMoves", gameId)
         .then(async snapshotResult => {
           await snapshotResult.onSnapshot(async (snapshot: any) => {
             if (snapshot.empty) {
@@ -189,13 +193,6 @@ export default Vue.extend({
           console.error(err);
         });
     },
-    async listenPlayerMoves(gameId: string) {
-      let payload = {
-        gameId
-      };
-
-      return await store.dispatch("subscribeToPlayerMoves", payload);
-    },
     async createAnonymousAccount() {
       let newAccount: Account = new Account();
       await newAccount.makeAnonymousAccount().then(res => {});
@@ -220,9 +217,6 @@ export default Vue.extend({
       } else {
         alert("Lower that number.");
       }
-    },
-    async getMazeData(sessionId: string) {
-      return await store.dispatch("getMazeDataOnce", sessionId);
     },
     async addPlayerToDB(
       startPosition: string,
@@ -281,7 +275,6 @@ export default Vue.extend({
         this.playableMaze.addPlayer(newPlayer);
       }
       if (changeType === "modified") {
-        // Todo: add a wonGame listener
         if (changeDoc.doc.id != store.getters["accountStore/getMyDocId"]) {
           let x: number = changeDoc.doc.data().currentPosition.split(",")[0];
           let y: number = changeDoc.doc.data().currentPosition.split(",")[1];
@@ -291,11 +284,11 @@ export default Vue.extend({
             changeDoc.doc.data().playerName
           );
         }
+        // Could do one of two things, add a counter that saves the user that recently won, or when a user changes position, change the value
         if (changeDoc.doc.data().wonGame) {
           let name = changeDoc.doc.data().playerName;
           if (name === undefined) name = "BRUH";
-          let msg = `This guy,  ${name}, won`;
-          alert(msg);
+          alert(`This guy,  ${name}, won`);
         }
       }
       if (changeType === "removed") {

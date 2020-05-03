@@ -48,10 +48,8 @@ export default Vue.extend({
     if (store.getters.getCurrentMaze != undefined)
       this.gameId = store.getters.getCurrentMaze.mazeId;
   },
-  // Todo: emit this last thing and push the cmommit
   methods: {
     async updatePlayerName(gameId: string, newPlayerName: string) {
-      // todo; make this method here
       let playerDoc: string = store.getters["accountStore/getMyDocId"];
       if (
         gameId != undefined &&

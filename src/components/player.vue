@@ -74,31 +74,13 @@ export default Vue.extend({
       let currentMaze: firebaseMaze = store.getters.getCurrentMaze;
 
       if (currentMaze.checkPlayerMove(documentId, x, y)) {
-        let newPosition: string = currentMaze.movePLayer(documentId, x, y);
         let playerMove: playerMove = {
           documentId,
-          newPlayerPostion: newPosition,
+          newPlayerPostion: currentMaze.movePLayer(documentId, x, y),
           gameID: this.gameId
         };
 
         store.commit("updatePlayerMoveCount", 1);
-        // store.commit("updatePlayerMoveTimeCount", 1);
-
-        // Updates the last time player moved in DB
-        // let playerMoveTimeCount: number = store.getters.getPlayerMoveTimeCount;
-        // if (playerMoveTimeCount === this.playerMoveTimeCounterLimit) {
-        //   await this.lastMoveTimeUpdate(documentId)
-        //     .then(res => {
-        //       store.commit("updatePlayerMoveTimeCount", -playerMoveTimeCount);
-        //     })
-        //     .catch(err => {
-        //       console.error("Err happend, but dont worry about it");
-        //       console.error(err);
-        //     });
-        // }
-
-        // Updates player position in DB
-        console.log(store.getters.getLimitForMoveCounter);
         let playerMoveCount: number = store.getters.getPlayerMoveCount;
         if (playerMoveCount === store.getters.getLimitForMoveCounter) {
           await store
@@ -110,17 +92,27 @@ export default Vue.extend({
               alert("stop");
             });
         }
-        if (currentMaze.checkPlayerReachedEnd(this.player)) {
+        let playerAtEnd: boolean = currentMaze.checkPlayerReachedEnd(
+          this.player
+        );
+        
+        if (playerAtEnd) {
           let payload: any = {
             gameId: currentMaze.getGameId(),
-            playerId: this.player.getDocumentId()
+            playerId: this.player.getDocumentId(),
+            win: true
           };
-          store.dispatch("triggerPlayerWon", payload);
-          // 1. add a wonGame field to player
-          // 1.1 change the field type for newPlayer
-          // 2. Im the player handler method, In app.vue, trigger a playerName has won
+          store.dispatch("changePlayerWinStatus", payload);
         }
-        // else if player not reached end and says he won change it
+
+        if (!playerAtEnd && store.getters.getMyPLayerData.wonGame) {
+          let payload: any = {
+            gameId: currentMaze.getGameId(),
+            playerId: this.player.getDocumentId(),
+            win: false
+          };
+          store.dispatch("changePlayerWinStatus", payload);
+        }
       }
     },
     generatePlayerClasses() {

@@ -4,7 +4,6 @@ import { MutationTree } from "vuex";
 import { firebaseData, dbSchema } from "@/firebaseConfig.ts";
 import { Player } from "@/classes/Player";
 import { playerConverter } from "@/converters";
-// Todo: change to shcema
 
 const state: playerState = {
   currentPlayers: Array<Player>(),
@@ -14,6 +13,7 @@ const state: playerState = {
   gameWon: false, // in db its gameWon, fix it
   myPlayerData: undefined,
 };
+
 const getters: GetterTree<any, any> = {
   getCurrentPlayers() {
     return state.currentPlayers;
@@ -31,6 +31,7 @@ const getters: GetterTree<any, any> = {
     return state.myPlayerData;
   },
 };
+
 const mutations: MutationTree<any> = {
   updateCurrentPlayers(state, newPLayers: Array<Player>) {
     state.currentPlayers = newPLayers;
@@ -51,8 +52,7 @@ const mutations: MutationTree<any> = {
     state.gameWon = newValue;
   },
 };
-// Todo: there is a lot of repetition with referencing the player doc. Make a state of where the player is in the db
-// Todo: At least make an interface that forces the relative path and adds optional parameters to specify which one you are going to use.
+
 const actions: ActionTree<any, any> = {
   async addPlayerToSession({ commit }, payload: playerGameSession) {
     let mazePlayerSubCollection = firebaseData
@@ -115,8 +115,7 @@ const actions: ActionTree<any, any> = {
       lastMoveTime: payload.newLastMoveTimeSeconds,
     });
   },
-  // Todo: update value and make it dynamic and change name to updatePlayerValue
-  async triggerPlayerWon({ commit }, payload: any) {
+  async changePlayerWinStatus({ commit }, payload: any) {
     let playerDoc = firebaseData
       .firestore()
       .collection(dbSchema.gameSessions)
@@ -125,7 +124,7 @@ const actions: ActionTree<any, any> = {
       .doc(payload.playerId);
     commit("updateGameWon", true);
     return playerDoc.update({
-      wonGame: true, // Update player value
+      wonGame: payload.win, // Update player value
     });
   },
 };

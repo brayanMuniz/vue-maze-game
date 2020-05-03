@@ -17,11 +17,7 @@
                 v-for="player in playersOnPoint(playableMaze.players, showCorrectPoint(row, col))"
                 :key="player.accountId"
               >
-                <player
-                  :player="player"
-                  :playerCountLimit="playerCountLimit"
-                  :gameId="playableMaze.mazeId"
-                />
+                <player :player="player" :gameId="playableMaze.mazeId" />
               </div>
             </div>
           </div>
@@ -44,8 +40,7 @@ import { playerMove } from "@/storeModules/fbPlayer";
 export default Vue.extend({
   name: "mazeComponent",
   props: {
-    playableMaze: firebaseMaze,
-    playerCountLimit: Number
+    playableMaze: firebaseMaze
   },
   data() {
     return {

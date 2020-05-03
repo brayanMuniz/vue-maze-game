@@ -2,7 +2,6 @@
   <div id="app">
     <div class="container-fluid mt-1">
       <navbar v-if="dataReady" @generateMazeSession="generateMazeSession" />
-      <!-- Todo: should do this automotically, no need to enter button -->
       <button
         v-if="myAccountId == ''"
         @click="createAnonymousAccount()"
@@ -11,7 +10,7 @@
     </div>
 
     <div class="container-fluid mt-2 mx-2" v-if="dataReady">
-      <maze :playableMaze="playableMaze" :playerCountLimit="Number(playerCountLimit)" />
+      <maze :playableMaze="playableMaze" />
     </div>
   </div>
 </template>
@@ -52,14 +51,11 @@ export default Vue.extend({
     return {
       dataReady: false,
       playableMaze: new firebaseMaze([], ""),
-      graphMaze: new firebaseMaze([], ""),
       startPostion: String(),
-      players: Array<Player>(),
       gameId: String(),
       myAccountId: String(),
       playerName: String(),
-      myAccount: new Account(),
-      playerCountLimit: 2
+      myAccount: new Account()
     };
   },
   async mounted() {
@@ -88,11 +84,7 @@ export default Vue.extend({
         mazeReady: false,
         playerDataReady: false,
         everythingReady: function() {
-          let allOk: boolean = false;
-          if (this.mazeReady && this.playerDataReady) {
-            allOk = true;
-          }
-          return allOk;
+          return this.mazeReady && this.playerDataReady;
         }
       };
 
@@ -275,7 +267,7 @@ export default Vue.extend({
     }
   },
   computed: {
-    localSession() {
+    localSession(): boolean {
       return store.state.localSession;
     }
   },
@@ -288,6 +280,5 @@ export default Vue.extend({
   
 <style lang="scss">
 @import "~bootstrap/scss/bootstrap";
-
-$grid-columns: 100; // allows bootstrap to have rows and col up to 40 until breaking to new line
+$grid-columns: 100;
 </style>

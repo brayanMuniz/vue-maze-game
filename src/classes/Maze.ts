@@ -215,7 +215,7 @@ export interface mazeData {
   startPosition: string;
   endPositions: Array<string>;
   mazeMap: mazeMap;
-  width: number; // Todo: have it as one size, mazes will be squared
+  width: number;
   height: number;
 }
 

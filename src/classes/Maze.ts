@@ -1,7 +1,5 @@
 import { Player } from "./Player";
-import { mazeConverter } from "@/converters";
 export class Maze {
-  solutions: number;
   startPosition: string;
   endPositions: Array<string>;
   mazeMap: mazeMap;
@@ -11,7 +9,6 @@ export class Maze {
   blocks: Array<Array<string>>;
 
   constructor(fromFirestoreMazeData?: mazeData) {
-    this.solutions = 0;
     this.startPosition = ``;
     this.endPositions = [];
     this.mazeMap = {};
@@ -20,7 +17,6 @@ export class Maze {
     this.unvisitedCells = [];
     this.blocks = [];
     if (fromFirestoreMazeData != undefined) {
-      this.solutions = fromFirestoreMazeData.solutions;
       this.startPosition = fromFirestoreMazeData.startPosition;
       this.endPositions = fromFirestoreMazeData.endPositions;
       this.width = fromFirestoreMazeData.width;
@@ -216,7 +212,6 @@ export class Maze {
 }
 
 export interface mazeData {
-  solutions: number; // Todo: remove this
   startPosition: string;
   endPositions: Array<string>;
   mazeMap: mazeMap;

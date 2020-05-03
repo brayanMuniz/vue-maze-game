@@ -82,24 +82,25 @@ export default Vue.extend({
         };
 
         store.commit("updatePlayerMoveCount", 1);
-        store.commit("updatePlayerMoveTimeCount", 1);
+        // store.commit("updatePlayerMoveTimeCount", 1);
 
         // Updates the last time player moved in DB
-        let playerMoveTimeCount: number = store.getters.getPlayerMoveTimeCount;
-        if (playerMoveTimeCount === this.playerMoveTimeCounterLimit) {
-          await this.lastMoveTimeUpdate(documentId)
-            .then(res => {
-              store.commit("updatePlayerMoveTimeCount", -playerMoveTimeCount);
-            })
-            .catch(err => {
-              console.error("Err happend, but dont worry about it");
-              console.error(err);
-            });
-        }
+        // let playerMoveTimeCount: number = store.getters.getPlayerMoveTimeCount;
+        // if (playerMoveTimeCount === this.playerMoveTimeCounterLimit) {
+        //   await this.lastMoveTimeUpdate(documentId)
+        //     .then(res => {
+        //       store.commit("updatePlayerMoveTimeCount", -playerMoveTimeCount);
+        //     })
+        //     .catch(err => {
+        //       console.error("Err happend, but dont worry about it");
+        //       console.error(err);
+        //     });
+        // }
 
         // Updates player position in DB
+        console.log(store.getters.getLimitForMoveCounter);
         let playerMoveCount: number = store.getters.getPlayerMoveCount;
-        if (playerMoveCount === this.playerCountLimit) {
+        if (playerMoveCount === store.getters.getLimitForMoveCounter) {
           await store
             .dispatch("sendPlayerMove", playerMove)
             .then(res => {
@@ -119,6 +120,7 @@ export default Vue.extend({
           // 1.1 change the field type for newPlayer
           // 2. Im the player handler method, In app.vue, trigger a playerName has won
         }
+        // else if player not reached end and says he won change it
       }
     },
     generatePlayerClasses() {
@@ -160,6 +162,11 @@ export default Vue.extend({
     },
     returnCurrentPointHelper(point: string) {
       return point;
+    }
+  },
+  computed: {
+    getPlayerMoveCounterLimit() {
+      return store.getters.getLimitForMoveCounter;
     }
   }
 });

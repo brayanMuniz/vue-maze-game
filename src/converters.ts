@@ -43,7 +43,6 @@ export let mazeConverter = {
   },
   toFireStore: function(maze: Maze) {
     return {
-      solutions: maze.solutions,
       startPosition: maze.startPosition,
       endPositions: maze.endPositions,
       mazeMap: this.toFireStoreMazeMap(maze),

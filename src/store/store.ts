@@ -6,7 +6,9 @@ import accountStore from "@/storeModules/accountStore";
 Vue.use(Vuex);
 
 export default new Vuex.Store({
-  state: {},
+  state: {
+    localSession: false,
+  },
   getters: {},
   mutations: {},
   actions: {},
@@ -18,7 +20,7 @@ export default new Vuex.Store({
       state: accountStore.state,
       getters: accountStore.getters,
       mutations: accountStore.mutations,
-      actions: accountStore.mutations
-    }
-  }
+      actions: accountStore.mutations,
+    },
+  },
 });

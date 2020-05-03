@@ -1,35 +1,8 @@
 <template>
   <div id="app">
-    <!-- Todo: seperate into own compoentn  -->
     <div class="container-fluid mt-1">
-      <div class="input-group input-group-sm" v-if="!localSession">
-        <div class="input-group-prepend">
-          <span class="input-group-text" id="basic-addon1">Session Id:</span>
-        </div>
-        <input type="text" placeholder="sessionId" v-model.trim="sessionId" class="form-control" />
-        <button @click="joinMazeSession(sessionId)" class="mr-1 btn btn-primary btn-sm">Join Game</button>
-        <div class="input-group-prepend">
-          <span class="input-group-text" id="basic-addon1">Update/Turn:</span>
-        </div>
-        <input
-          type="number"
-          placeholder="Steps To DB"
-          v-model="playerCountLimit"
-          class="form-control mr-1"
-        />
-
-        <input type="text" placeholder="Name" v-model="playerName" class="form-control" />
-        <button
-          @click="updatePlayerName(sessionId, playerName)"
-          class="btn btn-primary btn-sm"
-        >Update Name</button>
-        <div class="input-group-prepend">
-          <span class="input-group-text" id="basic-addon1">Size:</span>
-        </div>
-        <input type="number" placeholder="mazeSize" v-model="mazeSize" class="form-control" />
-
-        <button @click="generateMazeSession()" class="ml-1 btn btn-primary btn-sm">New Game</button>
-      </div>
+      <navbar v-if="dataReady" @generateMazeSession="generateMazeSession" />
+      <!-- Todo: should do this automotically, no need to enter button -->
       <button
         v-if="myAccountId == ''"
         @click="createAnonymousAccount()"
@@ -38,7 +11,7 @@
     </div>
 
     <div class="container-fluid mt-2 mx-2" v-if="dataReady">
-      <mazeComponent :playableMaze="playableMaze" :playerCountLimit="Number(playerCountLimit)" />
+      <maze :playableMaze="playableMaze" :playerCountLimit="Number(playerCountLimit)" />
     </div>
   </div>
 </template>
@@ -46,9 +19,12 @@
 <script lang="ts">
 import Vue from "vue";
 import bootstrap from "bootstrap";
-import mazeComponent from "@/components/mazeComponent.vue";
 import moment from "moment";
 import { mazeConverter } from "@/converters";
+
+// Components
+import maze from "@/components/maze.vue";
+import navbar from "@/components/navbar.vue";
 
 // Classes
 import { Account } from "@/classes/Account";
@@ -58,6 +34,7 @@ import { Maze, mazeMap, mazeData } from "@/classes/Maze";
 import { firebaseMaze } from "@/classes/DBMaze";
 
 import { firebaseData } from "@/firebaseConfig.ts";
+
 // Store
 import store from "@/store/store.ts";
 import {
@@ -73,14 +50,12 @@ export default Vue.extend({
   name: "app",
   data() {
     return {
-      localSession: false,
       dataReady: false,
       playableMaze: new firebaseMaze([], ""),
       graphMaze: new firebaseMaze([], ""),
-      mazeSize: 20,
       startPostion: String(),
       players: Array<Player>(),
-      sessionId: String(),
+      gameId: String(),
       myAccountId: String(),
       playerName: String(),
       myAccount: new Account(),
@@ -99,7 +74,7 @@ export default Vue.extend({
           let defaultSessionId: string = "xCDNvSHjpOfb2qU0KZ0D";
           await this.joinMazeSession(defaultSessionId);
         } else {
-          this.makeLocalSession(1, this.mazeSize, this.mazeSize); //! only works if height and width are the same
+          this.makeLocalSession(1, 10, 10); //! only works if height and width are the same
           this.dataReady = true;
         }
       } else {
@@ -109,7 +84,6 @@ export default Vue.extend({
   },
   methods: {
     async joinMazeSession(gameId: string) {
-      console.log(gameId);
       let gameReady = {
         mazeReady: false,
         playerDataReady: false,
@@ -126,7 +100,6 @@ export default Vue.extend({
         .dispatch("getMazeDataOnce", gameId)
         .then((mazeDataResult: firebaseMaze) => {
           this.setMaze(mazeDataResult, gameId);
-          console.log(mazeDataResult.mazeMap);
           gameReady.mazeReady = true;
         })
         .catch(err => {
@@ -154,9 +127,7 @@ export default Vue.extend({
             }
 
             await snapshot.docChanges().forEach(async (change: any) => {
-              // ! line was causing problms this.dataReady = false;
               this.playerHandler(change.type, change);
-              // All players are accounted for
               if (this.playableMaze.players.length === snapshot.size) {
                 // Checks if you are in the game
                 if (this.playableMaze.checkIfPlayerInGame(this.myAccountId)) {
@@ -197,14 +168,13 @@ export default Vue.extend({
       let newAccount: Account = new Account();
       await newAccount.makeAnonymousAccount().then(res => {});
     },
-    async generateMazeSession() {
-      if (this.mazeSize > 0 && this.mazeSize < 50) {
+    async generateMazeSession(mazeSize: number) {
+      if (mazeSize > 0 && mazeSize < 50) {
         this.dataReady = false;
         let players: Array<Player> = [];
         let mazeId: string = "";
         let newMaze = new firebaseMaze(players, mazeId);
-        newMaze.generateMaze(1, this.mazeSize, this.mazeSize);
-
+        newMaze.generateMaze(1, mazeSize, mazeSize);
         await store
           .dispatch("makeGameSession", newMaze)
           .then(async mazeDataDoc => {
@@ -239,28 +209,6 @@ export default Vue.extend({
         alert("problem adding you");
       });
     },
-    async updatePlayerName(gameId: string, newPlayerName: string) {
-      let playerDoc: string = store.getters["accountStore/getMyDocId"];
-      if (
-        gameId != undefined &&
-        playerDoc != undefined &&
-        newPlayerName != undefined
-      ) {
-        await store
-          .dispatch("updatePlayerName", {
-            gameId,
-            playerDoc,
-            newPlayerName
-          })
-          .then(res => {
-            console.log("Updated PlayerName");
-            this.playerName = newPlayerName;
-          })
-          .catch(err => {
-            alert("Err happen, but dont worry about it.");
-          });
-      }
-    },
     playerHandler(changeType: string, changeDoc: any) {
       if (changeType === "added") {
         let playerData: Player = changeDoc.doc.data();
@@ -272,6 +220,10 @@ export default Vue.extend({
           playerData.accountId,
           playerData.playerName
         );
+        if (
+          newPlayer.accountId === store.getters["accountStore/getMyAccountId"]
+        )
+          store.commit("updateMyPlayerData", newPlayer);
         this.playableMaze.addPlayer(newPlayer);
       }
       if (changeType === "modified") {
@@ -318,12 +270,18 @@ export default Vue.extend({
     setMaze(mazeData: firebaseMaze, mazeId: string) {
       this.playableMaze = mazeData;
       this.startPostion = this.playableMaze.startPosition;
-      this.sessionId = mazeId;
+      this.gameId = mazeId;
       store.commit("updateCurrentMaze", mazeData);
     }
   },
+  computed: {
+    localSession() {
+      return store.state.localSession;
+    }
+  },
   components: {
-    mazeComponent
+    maze,
+    navbar
   }
 });
 </script> 

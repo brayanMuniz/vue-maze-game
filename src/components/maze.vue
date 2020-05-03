@@ -1,5 +1,5 @@
 <template>
-  <div class="container">
+  <div class="container-fluid">
     <div class="row" v-for="row in mazeSize" :key="row">
       <div
         class="col-sm m-0 p-0 border-dark"
@@ -17,7 +17,7 @@
                 v-for="player in playersOnPoint(playableMaze.players, showCorrectPoint(row, col))"
                 :key="player.accountId"
               >
-                <playerComponent
+                <player
                   :player="player"
                   :playerCountLimit="playerCountLimit"
                   :gameId="playableMaze.mazeId"
@@ -32,7 +32,7 @@
 </template>
 <script lang="ts">
 import Vue from "vue";
-import playerComponent from "@/components/playerComponent.vue";
+import player from "@/components/player.vue";
 import moment from "moment";
 // Classes
 import { firebaseMaze } from "@/classes/DBMaze";
@@ -94,7 +94,7 @@ export default Vue.extend({
     }
   },
   components: {
-    playerComponent
+    player
   }
 });
 </script>

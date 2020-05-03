@@ -9,8 +9,10 @@ import { playerConverter } from "@/converters";
 const state: playerState = {
   currentPlayers: Array<Player>(),
   playerMoveCount: 0,
+  updateDbMoveCounter: 1,
   playerMoveTimeCount: 0,
-  gameWon: false,
+  gameWon: false, // in db its gameWon, fix it
+  myPlayerData: undefined,
 };
 const getters: GetterTree<any, any> = {
   getCurrentPlayers() {
@@ -19,19 +21,31 @@ const getters: GetterTree<any, any> = {
   getPlayerMoveCount() {
     return state.playerMoveCount;
   },
+  getLimitForMoveCounter() {
+    return state.updateDbMoveCounter;
+  },
   getPlayerMoveTimeCount() {
     return state.playerMoveTimeCount;
+  },
+  getMyPLayerData() {
+    return state.myPlayerData;
   },
 };
 const mutations: MutationTree<any> = {
   updateCurrentPlayers(state, newPLayers: Array<Player>) {
     state.currentPlayers = newPLayers;
   },
+  updateMoveCounter(state, newCounterAmount: number) {
+    state.updateDbMoveCounter = newCounterAmount;
+  },
   updatePlayerMoveCount(state, incrementAmount: number) {
     state.playerMoveCount += incrementAmount;
   },
   updatePlayerMoveTimeCount(state, incrementAmount: number) {
     state.playerMoveTimeCount += incrementAmount;
+  },
+  updateMyPlayerData(state, newPlayerData: Player) {
+    state.myPlayerData = newPlayerData;
   },
   updateGameWon(state, newValue: boolean) {
     state.gameWon = newValue;
@@ -47,14 +61,6 @@ const actions: ActionTree<any, any> = {
       .doc(payload.gameId)
       .collection(dbSchema.players);
     return await mazePlayerSubCollection.add(playerConverter.toFireStore(payload.player));
-  },
-  async getPlayerData({ commit }, gameId: string) {
-    return await firebaseData
-      .firestore()
-      .collection(dbSchema.gameSessions)
-      .doc(gameId)
-      .collection(dbSchema.players)
-      .get();
   },
   async subscribeToPlayerMoves({ commit }, gameId: string) {
     return await firebaseData
@@ -109,8 +115,7 @@ const actions: ActionTree<any, any> = {
       lastMoveTime: payload.newLastMoveTimeSeconds,
     });
   },
-  // Might be problem, whoever reaches the db first might be able to win first even if other person got there first
-  // Could solve this by addinga time won field
+  // Todo: update value and make it dynamic and change name to updatePlayerValue
   async triggerPlayerWon({ commit }, payload: any) {
     let playerDoc = firebaseData
       .firestore()
@@ -120,7 +125,7 @@ const actions: ActionTree<any, any> = {
       .doc(payload.playerId);
     commit("updateGameWon", true);
     return playerDoc.update({
-      wonGame: true,
+      wonGame: true, // Update player value
     });
   },
 };
@@ -149,9 +154,11 @@ interface playerSnapShotDataFunction {
 }
 export interface playerState {
   currentPlayers: Array<Player>;
+  updateDbMoveCounter: Number;
   playerMoveCount: number;
   playerMoveTimeCount: number;
   gameWon: boolean;
+  myPlayerData: Player | undefined;
 }
 
 export interface playerGameSession {

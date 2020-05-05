@@ -1,8 +1,11 @@
 <template>
   <div id="app">
     <div class="container-fluid mt-1">
-      <navbar v-if="dataReady" @generateMazeSession="generateMazeSession" />
-      <!-- Todo: should do this automotically, no need to enter button -->
+      <navbar
+        v-if="dataReady"
+        @generateMazeSession="generateMazeSession"
+        @joinMazeSession="joinMazeSession"
+      />
       <button
         v-if="myAccountId == ''"
         @click="createAnonymousAccount()"
@@ -11,7 +14,7 @@
     </div>
 
     <div class="container-fluid mt-2 mx-2" v-if="dataReady">
-      <maze :playableMaze="playableMaze" :playerCountLimit="Number(playerCountLimit)" />
+      <maze :playableMaze="playableMaze" />
     </div>
   </div>
 </template>
@@ -42,9 +45,6 @@ import {
   playerSnapshot,
   playingValue
 } from "@/storeModules/fbPlayer";
-import accountStore, {
-  accountMutationsSchema
-} from "@/storeModules/accountStore";
 
 export default Vue.extend({
   name: "app",
@@ -52,14 +52,11 @@ export default Vue.extend({
     return {
       dataReady: false,
       playableMaze: new firebaseMaze([], ""),
-      graphMaze: new firebaseMaze([], ""),
       startPostion: String(),
-      players: Array<Player>(),
       gameId: String(),
       myAccountId: String(),
       playerName: String(),
-      myAccount: new Account(),
-      playerCountLimit: 2
+      myAccount: new Account()
     };
   },
   async mounted() {
@@ -71,10 +68,10 @@ export default Vue.extend({
         this.myAccountId = this.myAccount.returnUid();
         store.commit("accountStore/setMyUid", user.uid);
         if (this.localSession === false) {
-          let defaultSessionId: string = "xCDNvSHjpOfb2qU0KZ0D";
+          let defaultSessionId: string = "xVkrepqPr6Gg6YpkdaUS";
           await this.joinMazeSession(defaultSessionId);
         } else {
-          this.makeLocalSession(1, 10, 10); //! only works if height and width are the same
+          this.makeLocalSession(1, 10, 10);
           this.dataReady = true;
         }
       } else {
@@ -83,91 +80,6 @@ export default Vue.extend({
     });
   },
   methods: {
-    async joinMazeSession(gameId: string) {
-      let gameReady = {
-        mazeReady: false,
-        playerDataReady: false,
-        everythingReady: function() {
-          let allOk: boolean = false;
-          if (this.mazeReady && this.playerDataReady) {
-            allOk = true;
-          }
-          return allOk;
-        }
-      };
-
-      await store
-        .dispatch("getMazeDataOnce", gameId)
-        .then((mazeDataResult: firebaseMaze) => {
-          this.setMaze(mazeDataResult, gameId);
-          gameReady.mazeReady = true;
-        })
-        .catch(err => {
-          console.error(err);
-          gameReady.mazeReady = false;
-        });
-
-      await store
-        .dispatch("subscribeToPlayerMoves", gameId)
-        .then(async snapshotResult => {
-          await snapshotResult.onSnapshot(async (snapshot: any) => {
-            if (snapshot.empty) {
-              await this.addPlayerToDB(
-                this.startPostion,
-                this.myAccountId,
-                gameId
-              )
-                .then(res => {
-                  store.commit("accountStore/setMyDocId", res.id);
-                  gameReady.playerDataReady = true;
-                })
-                .catch(err => {
-                  console.error(err);
-                });
-            }
-
-            await snapshot.docChanges().forEach(async (change: any) => {
-              this.playerHandler(change.type, change);
-              if (this.playableMaze.players.length === snapshot.size) {
-                // Checks if you are in the game
-                if (this.playableMaze.checkIfPlayerInGame(this.myAccountId)) {
-                  let myDocId = this.playableMaze.getDocIdOnAccountId(
-                    this.myAccountId
-                  );
-                  if (myDocId != undefined) {
-                    store.commit("accountStore/setMyDocId", myDocId);
-                    gameReady.playerDataReady = true;
-                  } else {
-                    gameReady.playerDataReady = false;
-                    alert("Problem getting your data");
-                  }
-                } else {
-                  await this.addPlayerToDB(
-                    this.startPostion,
-                    this.myAccountId,
-                    gameId
-                  ).then(res => {
-                    store.commit("accountStore/setMyDocId", res.id);
-                    gameReady.playerDataReady = true;
-                  });
-                }
-                // Game ready condition must be in here, because this does not have all the players in the first try,
-                // So when all players are loaded in check if you are here
-                if (gameReady.everythingReady()) {
-                  this.dataReady = true;
-                }
-              }
-            });
-          });
-        })
-        .catch(err => {
-          console.error(err);
-        });
-    },
-    async createAnonymousAccount() {
-      let newAccount: Account = new Account();
-      await newAccount.makeAnonymousAccount().then(res => {});
-    },
     async generateMazeSession(mazeSize: number) {
       if (mazeSize > 0 && mazeSize < 50) {
         this.dataReady = false;
@@ -188,16 +100,68 @@ export default Vue.extend({
         alert("Lower that number.");
       }
     },
-    async addPlayerToDB(
-      startPosition: string,
-      accountId: string,
-      gameId: string
-    ) {
+    async joinMazeSession(gameId: string) {
+      let gameReady = {
+        mazeReady: false,
+        playerDataReady: false,
+        everythingReady: function() {
+          return this.mazeReady && this.playerDataReady;
+        }
+      };
+
+      await store
+        .dispatch("getMazeDataOnce", gameId)
+        .then((mazeDataResult: firebaseMaze) => {
+          this.setMaze(mazeDataResult, gameId);
+          gameReady.mazeReady = true;
+        })
+        .catch(err => {
+          console.error(err);
+          gameReady.mazeReady = false;
+        });
+
+      await store
+        .dispatch("subscribeToPlayerMoves", gameId)
+        .then(async snapshotResult => {
+          await snapshotResult.onSnapshot(async (snapshot: any) => {
+            if (snapshot.empty) {
+              await this.addPlayerToDB(this.startPostion, gameId)
+                .then(res => {
+                  gameReady.playerDataReady = true;
+                })
+                .catch(err => {
+                  console.error(err);
+                });
+            }
+
+            await snapshot.docChanges().forEach(async (change: any) => {
+              this.playerHandler(change.type, change);
+              if (this.playableMaze.players.length === snapshot.size) {
+                if (!this.playableMaze.checkIfPlayerInGame(this.myAccountId)) {
+                  await this.addPlayerToDB(this.startPostion, gameId).then(
+                    res => {
+                      gameReady.playerDataReady = true;
+                    }
+                  );
+                }
+                this.dataReady = true;
+                if (gameReady.everythingReady()) {
+                  this.dataReady = true;
+                }
+              }
+            });
+          });
+        })
+        .catch(err => {
+          console.error(err);
+        });
+    },
+    async addPlayerToDB(startPosition: string, gameId: string) {
+      let accountId: string = store.getters["accountStore/getMyAccountId"];
+      console.log(accountId);
       let player: Player = new Player(
         startPosition,
         false,
-        undefined,
-        moment().unix(),
         accountId,
         this.playerName
       );
@@ -205,9 +169,15 @@ export default Vue.extend({
         gameId,
         player
       };
-      return await store.dispatch("addPlayerToSession", data).catch(err => {
-        alert("problem adding you");
-      });
+      if (accountId != "" || accountId != undefined)
+        return await store.dispatch("addPlayerToSession", data).catch(err => {
+          console.error(err);
+          alert("problem adding you");
+        });
+    },
+    async createAnonymousAccount() {
+      let newAccount: Account = new Account();
+      await newAccount.makeAnonymousAccount().then(res => {});
     },
     playerHandler(changeType: string, changeDoc: any) {
       if (changeType === "added") {
@@ -216,12 +186,11 @@ export default Vue.extend({
           playerData.currentPosition,
           playerData.wonGame,
           changeDoc.doc.id,
-          playerData.lastMoveTime,
-          playerData.accountId,
           playerData.playerName
         );
         if (
-          newPlayer.accountId === store.getters["accountStore/getMyAccountId"]
+          newPlayer.getAccountId() ===
+          store.getters["accountStore/getMyAccountId"]
         )
           store.commit("updateMyPlayerData", newPlayer);
         this.playableMaze.addPlayer(newPlayer);
@@ -236,7 +205,6 @@ export default Vue.extend({
             changeDoc.doc.data().playerName
           );
         }
-        // Could do one of two things, add a counter that saves the user that recently won, or when a user changes position, change the value
         if (changeDoc.doc.data().wonGame) {
           let name = changeDoc.doc.data().playerName;
           if (name === undefined) name = "BRUH";
@@ -258,9 +226,7 @@ export default Vue.extend({
       let myPlayer: Player = new Player(
         newMaze.getStartPosition(),
         false,
-        testDocId,
-        moment().unix(),
-        myAccountId,
+        "",
         "myName"
       );
       newMaze.addPlayer(myPlayer);
@@ -275,7 +241,7 @@ export default Vue.extend({
     }
   },
   computed: {
-    localSession() {
+    localSession(): boolean {
       return store.state.localSession;
     }
   },
@@ -288,6 +254,5 @@ export default Vue.extend({
   
 <style lang="scss">
 @import "~bootstrap/scss/bootstrap";
-
-$grid-columns: 100; // allows bootstrap to have rows and col up to 40 until breaking to new line
+$grid-columns: 100;
 </style>

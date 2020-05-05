@@ -10,23 +10,13 @@ const getters: GetterTree<any, any> = {
   getMyAccountId(state) {
     return state.myUid;
   },
-  getMyDocId(state) {
-    return state.myDocId;
-  },
 };
 const mutations: MutationTree<any> = {
   setMyUid(state, newUid: string) {
     state.myUid = newUid;
   },
-  setMyDocId(state, newDocId: string) {
-    state.myDocId = newDocId;
-  },
 };
 const actions: ActionTree<any, any> = {};
-
-export const accountMutationsSchema = {
-  setMyUid: "setMyUid",
-};
 
 export default {
   state,

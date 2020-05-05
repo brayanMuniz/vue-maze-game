@@ -59,8 +59,9 @@ const actions: ActionTree<any, any> = {
       .firestore()
       .collection(dbSchema.gameSessions)
       .doc(payload.gameId)
-      .collection(dbSchema.players);
-    return await mazePlayerSubCollection.add(playerConverter.toFireStore(payload.player));
+      .collection(dbSchema.players)
+      .doc(payload.player.accountId);
+    return await mazePlayerSubCollection.set(playerConverter.toFireStore(payload.player));
   },
   async subscribeToPlayerMoves({ commit }, gameId: string) {
     return await firebaseData
@@ -75,7 +76,7 @@ const actions: ActionTree<any, any> = {
       .collection(dbSchema.gameSessions)
       .doc(payload.gameID)
       .collection(dbSchema.players)
-      .doc(payload.documentId);
+      .doc(payload.accountUid);
 
     return await playerDoc.update({
       currentPosition: payload.newPlayerPostion,
@@ -99,20 +100,9 @@ const actions: ActionTree<any, any> = {
       .collection(dbSchema.gameSessions)
       .doc(payload.gameId)
       .collection(dbSchema.players)
-      .doc(payload.playerDoc);
+      .doc(payload.playerAccountId);
     return await playerDoc.update({
       playerName: payload.newPlayerName,
-    });
-  },
-  async updatePlayerLastMoveTime({ commit }, payload: any) {
-    let playerDoc = firebaseData
-      .firestore()
-      .collection(dbSchema.gameSessions)
-      .doc(payload.gameId)
-      .collection(dbSchema.players)
-      .doc(payload.playerId);
-    return playerDoc.update({
-      lastMoveTime: payload.newLastMoveTimeSeconds,
     });
   },
   async changePlayerWinStatus({ commit }, payload: any) {
@@ -165,7 +155,7 @@ export interface playerGameSession {
   player: Player;
 }
 export interface playerMove {
-  documentId: string;
+  accountUid: string;
   newPlayerPostion: string;
   gameID: string;
 }

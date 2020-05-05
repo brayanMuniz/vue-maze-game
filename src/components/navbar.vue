@@ -4,7 +4,10 @@
       <span class="input-group-text" id="basic-addon1">Session Id:</span>
     </div>
     <input type="text" placeholder="gameId" v-model.trim="gameId" class="form-control" />
-    <button @click="joinMazeSession(gameId)" class="mr-1 btn btn-primary btn-sm">Join Game</button>
+    <button
+      @click="$emit('joinMazeSession', String(gameId))"
+      class="mr-1 btn btn-primary btn-sm"
+    >Join Game</button>
     <div class="input-group-prepend">
       <span class="input-group-text" id="basic-addon1">Update/Turn:</span>
     </div>
@@ -50,16 +53,18 @@ export default Vue.extend({
   },
   methods: {
     async updatePlayerName(gameId: string, newPlayerName: string) {
-      let playerDoc: string = store.getters["accountStore/getMyDocId"];
+      let playerAccountId: string =
+        store.getters["accountStore/getMyAccountId"];
+      console.log(playerAccountId);
       if (
         gameId != undefined &&
-        playerDoc != undefined &&
+        playerAccountId != undefined &&
         newPlayerName != undefined
       ) {
         await store
           .dispatch("updatePlayerName", {
             gameId,
-            playerDoc,
+            playerAccountId,
             newPlayerName
           })
           .then(res => {

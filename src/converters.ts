@@ -6,7 +6,6 @@ import { nodes, Graph } from "./classes/Graph";
 export interface playerFireStoreData {
   currentPosition: string;
   playerId: string;
-  lastMoveTime: number;
   wonGame: boolean;
   playerName?: string;
 }
@@ -15,9 +14,8 @@ export let playerConverter = {
   toFireStore: (player: Player) => {
     return {
       currentPosition: player.currentPosition,
-      accountId: player.accountId,
-      lastPlayerMove: player.getLastMoveTimeSeconds(),
       gameWon: player.wonGame,
+      playerName: player.getPlayerName(),
     };
   },
   // this will be used later to join sessions
@@ -26,7 +24,7 @@ export let playerConverter = {
       firebasePlayerData.currentPosition,
       firebasePlayerData.wonGame,
       firebasePlayerData.playerId,
-      firebasePlayerData.lastMoveTime
+      firebasePlayerData.playerName
     );
   },
 };

@@ -18,16 +18,15 @@ export class Account {
     return await firebaseData
       .auth()
       .signInAnonymously()
-      .catch(error => {
-      });
+      .catch((error) => {});
   }
 
   public async signOut() {
     return await firebaseData
       .auth()
       .signOut()
-      .catch(err => {
-        (err);
+      .catch((err) => {
+        err;
       });
   }
 

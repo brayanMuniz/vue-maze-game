@@ -1,33 +1,14 @@
-import moment from "moment";
-// AccountId is based on the authentication, docId is the randomly generated id for the collection
 export class Player {
   currentPosition: string;
   accountId: string;
-  documentId: string;
-  lastMoveTime: number;
   wonGame: boolean;
   playerName?: string;
-  constructor(
-    startPosition: string,
-    wonGame: boolean,
-    documentId?: string,
-    lastPlayerMove?: number,
-    accountId?: string,
-    playerName?: string
-  ) {
+  constructor(startPosition: string, wonGame: boolean, accountId?: string, playerName?: string) {
     this.currentPosition = startPosition;
     this.wonGame = wonGame;
     this.accountId = "";
-    this.documentId = "";
-    if (documentId != undefined) {
-      this.documentId = documentId;
-    }
-    this.lastMoveTime = moment().unix();
     if (accountId != undefined) {
       this.accountId = accountId;
-    }
-    if (lastPlayerMove != undefined) {
-      this.lastMoveTime = lastPlayerMove;
     }
     if (playerName != undefined) {
       this.playerName = playerName;
@@ -49,20 +30,13 @@ export class Player {
     this.playerName = newName;
   }
 
-  public getLastMoveTimeSeconds(): number {
-    return this.lastMoveTime;
-  }
-
   public getAccountId() {
     return this.accountId;
   }
 
-  public getDocumentId() {
-    return this.documentId;
-  }
-
-  public getPlayerName() {
-    return this.playerName;
+  public getPlayerName(): String | "" {
+    if (this.playerName) return this.playerName;
+    else return "";
   }
 
   public replacePostion(x: number, y: number) {
@@ -75,11 +49,7 @@ export class Player {
     this.currentPosition = `${updatedX},${updatedY}`;
   }
 
-  public updateDocId(newDocId: string) {
-    this.documentId = newDocId;
-  }
-
-  public uppdatePLayerId(newAccountId: string) {
+  public uppdatePlayerId(newAccountId: string) {
     this.accountId = newAccountId;
   }
 }

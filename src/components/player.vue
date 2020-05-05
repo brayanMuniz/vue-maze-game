@@ -1,10 +1,10 @@
 <template>
   <div>
     <input
-      @keyup.up="userMove(myDocumentId, 0 ,1)"
-      @keyup.down="userMove(myDocumentId, 0 ,-1)"
-      @keyup.left="userMove(myDocumentId, -1 ,0)"
-      @keyup.right="userMove(myDocumentId, 1 ,0)"
+      @keyup.up="userMove(myAccountUid, 0 ,1)"
+      @keyup.down="userMove(myAccountUid, 0 ,-1)"
+      @keyup.left="userMove(myAccountUid, -1 ,0)"
+      @keyup.right="userMove(myAccountUid, 1 ,0)"
       class="form-control m-1 p-0"
       :class="generatePlayerClasses()"
       v-model="playerName"
@@ -29,9 +29,9 @@ export default Vue.extend({
       inserted: (el, binding, vnode) => {
         if (vnode.context) {
           let currentMaze: firebaseMaze = store.getters.getCurrentMaze;
-          let myDocId = store.getters["accountStore/getMyDocId"];
+          let accountUid: string = store.getters["accountStore/getMyAccountId"];
           let myCurrentPosition: string = currentMaze.getPLayerPosition(
-            myDocId
+            accountUid
           );
           if (binding.value === myCurrentPosition) {
             el.focus();
@@ -52,31 +52,23 @@ export default Vue.extend({
       playerMoveTimeCount: 0,
       playerMoveTimeCounterLimit: Number(),
       playerMoveCount: 0,
-      myDocumentId: store.getters["accountStore/getMyDocId"]
+      myAccountUid: store.getters["accountStore/getMyAccountId"]
     };
   },
   mounted() {
-    if (this.myDocumentId === "" || this.myDocumentId === undefined) {
-      this.myDocumentId = store.getters["accountStore/getMyDocId"];
+    if (this.myAccountUid === "" || this.myAccountUid === undefined) {
+      this.myAccountUid = store.getters["accountStore/getMyAccountId"];
     }
     this.playerName = this.player.getPlayerName();
   },
   methods: {
-    async lastMoveTimeUpdate(playerId: string) {
-      let payload = {
-        playerId,
-        gameId: this.gameId,
-        newLastMoveTimeSeconds: moment().unix()
-      };
-      return store.dispatch("updatePlayerLastMoveTime", payload);
-    },
-    async userMove(documentId: string, x: number, y: number) {
+    async userMove(accountUid: string, x: number, y: number) {
       let currentMaze: firebaseMaze = store.getters.getCurrentMaze;
 
-      if (currentMaze.checkPlayerMove(documentId, x, y)) {
+      if (currentMaze.checkPlayerMove(accountUid, x, y)) {
         let playerMove: playerMove = {
-          documentId,
-          newPlayerPostion: currentMaze.movePLayer(documentId, x, y),
+          accountUid,
+          newPlayerPostion: currentMaze.movePLayer(accountUid, x, y),
           gameID: this.gameId
         };
 
@@ -95,11 +87,11 @@ export default Vue.extend({
         let playerAtEnd: boolean = currentMaze.checkPlayerReachedEnd(
           this.player
         );
-        
+
         if (playerAtEnd) {
           let payload: any = {
             gameId: currentMaze.getGameId(),
-            playerId: this.player.getDocumentId(),
+            playerId: this.player.getAccountId(),
             win: true
           };
           store.dispatch("changePlayerWinStatus", payload);
@@ -108,7 +100,7 @@ export default Vue.extend({
         if (!playerAtEnd && store.getters.getMyPLayerData.wonGame) {
           let payload: any = {
             gameId: currentMaze.getGameId(),
-            playerId: this.player.getDocumentId(),
+            playerId: this.player.getAccountId(),
             win: false
           };
           store.dispatch("changePlayerWinStatus", payload);
@@ -122,7 +114,7 @@ export default Vue.extend({
       };
 
       let myPoint = currentMaze.getPLayerPosition(
-        store.getters["accountStore/getMyDocId"]
+        store.getters["accountStore/getMyAccountId"]
       );
       if (
         this.player.getAccountId() ===

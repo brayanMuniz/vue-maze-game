@@ -9,16 +9,6 @@ export class firebaseMaze extends Maze {
     this.mazeId = mazeId;
   }
 
-  public getPlayerByDoc(playerDoc: string): Player | undefined {
-    let selectedPlayer: Player | undefined = undefined;
-    this.players.forEach((player) => {
-      if (player.documentId == playerDoc) {
-        selectedPlayer = player;
-      }
-    });
-    return selectedPlayer;
-  }
-
   public checkIfPlayerInGame(playerUid: string): boolean {
     let inGame: boolean = false;
     this.players.forEach((player) => {
@@ -29,24 +19,22 @@ export class firebaseMaze extends Maze {
     return inGame;
   }
 
-  public getDocIdOnAccountId(accountId: string): string | undefined {
-    let documentId: string | undefined = undefined;
+  public getPlayerByAccountUid(accountUid: string): Player | undefined {
+    let selectedPlayer: Player | undefined = undefined;
     this.players.forEach((player) => {
-      if (player.getAccountId() == accountId) {
-        documentId = player.getDocumentId();
-      }
+      if (player.getAccountId() === accountUid) selectedPlayer = player;
     });
-    return documentId;
+    return selectedPlayer;
   }
 
   public addPlayer(player: Player) {
     this.players.push(player);
   }
 
-  public removePlayer(playerDoc: String) {
+  public removePlayer(playerAccountUid: String) {
     let idx: number | undefined = undefined;
     this.players.forEach((player, index) => {
-      if (player.getDocumentId() === playerDoc) {
+      if (player.getAccountId() === playerAccountUid) {
         idx = index;
       }
     });
@@ -55,10 +43,10 @@ export class firebaseMaze extends Maze {
     }
   }
 
-  public getPLayerPosition(docId: string): string {
+  public getPLayerPosition(accontUid: string): string {
     let currentPosition: string = "";
     this.players.forEach((player) => {
-      if (player.getDocumentId() === docId) {
+      if (player.getAccountId() === accontUid) {
         currentPosition = player.getCurrentPosition();
       }
     });
@@ -66,25 +54,25 @@ export class firebaseMaze extends Maze {
     return currentPosition;
   }
 
-  public updatePlayerName(documentId: string, newName: string) {
-    let selectedPlayer: Player | undefined = this.getPlayerByDoc(documentId);
+  public updatePlayerName(accountUid: string, newName: string) {
+    let selectedPlayer: Player | undefined = this.getPlayerByAccountUid(accountUid);
     if (selectedPlayer != undefined) {
       if (selectedPlayer.checkForChangeInName(newName)) selectedPlayer.updateName(newName);
     }
   }
 
-  public replacePlayerPosition(documentId: string, x: number, y: number) {
+  public replacePlayerPosition(accontUid: string, x: number, y: number) {
     this.players.forEach((player) => {
-      if (player.documentId === documentId) {
+      if (player.getAccountId() === accontUid) {
         player.replacePostion(x, y);
       }
     });
   }
 
-  public movePLayer(documentId: string, x: number, y: number): string {
+  public movePLayer(accontUid: string, x: number, y: number): string {
     let newCurrentPosition: string = "";
     this.players.forEach((player) => {
-      if (player.documentId === documentId) {
+      if (player.getAccountId() === accontUid) {
         player.updatePosition(x, y);
         newCurrentPosition = player.getCurrentPosition();
       }
@@ -92,7 +80,7 @@ export class firebaseMaze extends Maze {
     return newCurrentPosition;
   }
 
-  public checkPlayerMove(documentId: string, x: number, y: number): boolean {
+  public checkPlayerMove(accontUid: string, x: number, y: number): boolean {
     let direction: "N" | "S" | "E" | "W" | undefined;
     let playerPosition: string = "";
     if (x == 1 && y == 0) {
@@ -106,10 +94,11 @@ export class firebaseMaze extends Maze {
     }
     if (direction != undefined) {
       this.players.forEach((player) => {
-        if (player.documentId == documentId) {
+        if (player.getAccountId() === accontUid) {
           playerPosition = player.getCurrentPosition();
         }
       });
+
       let result: number | boolean = this.mazeMap[playerPosition][direction];
       if (typeof result == "number" && result > 1) return true;
       if (typeof result == "boolean" && this.mazeMap[playerPosition][direction]) return true;

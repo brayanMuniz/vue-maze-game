@@ -6,11 +6,6 @@
         @generateMazeSession="generateMazeSession"
         @joinMazeSession="joinMazeSession"
       />
-      <button
-        v-if="myAccountId == ''"
-        @click="createAnonymousAccount()"
-        class="ml-1 btn btn-primary btn-sm"
-      >Make Account</button>
     </div>
 
     <div class="container-fluid mt-2 mx-2" v-if="dataReady">
@@ -75,7 +70,7 @@ export default Vue.extend({
           this.dataReady = true;
         }
       } else {
-        alert("Make account to play");
+        this.createAnonymousAccount();
       }
     });
   },
@@ -177,7 +172,9 @@ export default Vue.extend({
     },
     async createAnonymousAccount() {
       let newAccount: Account = new Account();
-      await newAccount.makeAnonymousAccount().then(res => {});
+      await newAccount.makeAnonymousAccount().then(res => {
+        console.log("Made an account, sneaky");
+      });
     },
     playerHandler(changeType: string, changeDoc: any) {
       if (changeType === "added") {

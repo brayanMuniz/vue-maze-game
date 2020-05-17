@@ -196,7 +196,7 @@ export default Vue.extend({
         this.playableMaze.addPlayer(newPlayer);
       }
       if (changeType === "modified") {
-        if (changeDoc.doc.id != store.getters["accountStore/getMyDocId"]) {
+        if (changeDoc.doc.id != store.getters["accountStore/getMyAccountId"]) {
           let x: number = changeDoc.doc.data().currentPosition.split(",")[0];
           let y: number = changeDoc.doc.data().currentPosition.split(",")[1];
           this.playableMaze.replacePlayerPosition(changeDoc.doc.id, x, y);
@@ -204,7 +204,13 @@ export default Vue.extend({
             changeDoc.doc.id,
             changeDoc.doc.data().playerName
           );
+        } else {
+          store.commit(
+            "updateCurrentPositionInDb",
+            changeDoc.doc.data().currentPosition
+          );
         }
+
         if (changeDoc.doc.data().wonGame) {
           let name = changeDoc.doc.data().playerName;
           if (name === undefined) name = "BRUH";

@@ -12,6 +12,8 @@ const state: playerState = {
   playerMoveTimeCount: 0,
   gameWon: false, // in db its gameWon, fix it
   myPlayerData: undefined,
+  positionInDb: String(),
+  pendingMoves: [],
 };
 
 const getters: GetterTree<any, any> = {
@@ -29,6 +31,9 @@ const getters: GetterTree<any, any> = {
   },
   getMyPLayerData() {
     return state.myPlayerData;
+  },
+  getPendingMoves() {
+    return state.pendingMoves;
   },
 };
 
@@ -50,6 +55,20 @@ const mutations: MutationTree<any> = {
   },
   updateGameWon(state, newValue: boolean) {
     state.gameWon = newValue;
+  },
+  // This does not update the actual position,
+  // but updates the current position in vuex,
+  updateCurrentPositionInDb(state, newPosition: string) {
+    state.positionInDb = newPosition;
+  },
+  addPendingMove(state, newMove: string) {
+    state.pendingMoves.push(newMove);
+  },
+  removePendingMove(state) {
+    state.pendingMoves.shift();
+  },
+  clearPendingMoves(state) {
+    state.pendingMoves = [];
   },
 };
 
@@ -148,6 +167,8 @@ export interface playerState {
   playerMoveTimeCount: number;
   gameWon: boolean;
   myPlayerData: Player | undefined;
+  positionInDb: String; // Point
+  pendingMoves: Array<string>; // Points
 }
 
 export interface playerGameSession {

@@ -41,7 +41,6 @@ export default Vue.extend({
     }
   },
   props: {
-    playerCountLimit: Number,
     player: Object,
     gameId: String
   },
@@ -72,23 +71,28 @@ export default Vue.extend({
           gameID: this.gameId
         };
 
+        store.commit("addPendingMove", playerMove.newPlayerPostion);
         store.commit("updatePlayerMoveCount", 1);
         let playerMoveCount: number = store.getters.getPlayerMoveCount;
         if (playerMoveCount === store.getters.getLimitForMoveCounter) {
           await store
             .dispatch("sendPlayerMove", playerMove)
             .then(res => {
+              console.log("Moved player in Db");
+              store.commit("removePendingMove");
               store.commit("updatePlayerMoveCount", -playerMoveCount);
             })
             .catch(err => {
               alert("stop");
             });
         }
-        let playerAtEnd: boolean = currentMaze.checkPlayerReachedEnd(
+
+        let isPlayerAtEnd: boolean = currentMaze.checkPlayerReachedEnd(
           this.player
         );
 
-        if (playerAtEnd) {
+        // Trigger that player won
+        if (isPlayerAtEnd) {
           let payload: any = {
             gameId: currentMaze.getGameId(),
             playerId: this.player.getAccountId(),
@@ -97,13 +101,30 @@ export default Vue.extend({
           store.dispatch("changePlayerWinStatus", payload);
         }
 
-        if (!playerAtEnd && store.getters.getMyPLayerData.wonGame) {
+        // Change Player win status
+        if (!isPlayerAtEnd && store.getters.getMyPLayerData.wonGame) {
           let payload: any = {
             gameId: currentMaze.getGameId(),
             playerId: this.player.getAccountId(),
             win: false
           };
           store.dispatch("changePlayerWinStatus", payload);
+        }
+
+        // The max write speed for firestore is 1 write/second, if this is exceeded it breaks connection,
+        // but if a new connection is established it will work again
+        if (store.getters.getPendingMoves.length > 3) {
+          playerMove.newPlayerPostion = store.getters.getPendingMoves.pop();
+          await store
+            .dispatch("sendPlayerMove", playerMove)
+            .then(res => {
+              console.log("Moved broken plyaer");
+              store.commit("clearPendingMoves");
+              store.commit("updatePlayerMoveCount", -playerMoveCount);
+            })
+            .catch(err => {
+              alert("stop");
+            });
         }
       }
     },

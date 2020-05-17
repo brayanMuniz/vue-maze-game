@@ -46,7 +46,6 @@ export default Vue.extend({
   },
   data() {
     return {
-      dataReady: false,
       playerName: String(),
       playerMoveTimeCount: 0,
       playerMoveTimeCounterLimit: Number(),
@@ -73,6 +72,7 @@ export default Vue.extend({
 
         store.commit("addPendingMove", playerMove.newPlayerPostion);
         store.commit("updatePlayerMoveCount", 1);
+
         let playerMoveCount: number = store.getters.getPlayerMoveCount;
         if (playerMoveCount === store.getters.getLimitForMoveCounter) {
           await store
@@ -146,24 +146,6 @@ export default Vue.extend({
       }
 
       return playerClass;
-    },
-    showPlayer(formatedpoint: string, listOfPLayers: Array<Player>): boolean {
-      let playerInPoint: boolean = false;
-      listOfPLayers.forEach(player => {
-        if (player.getCurrentPosition() === formatedpoint) {
-          playerInPoint = true;
-        }
-      });
-      return playerInPoint;
-    },
-    playersOnPoint(listOfPLayers: Array<Player>, point: string): Array<Player> {
-      let playersThere: Array<Player> = [];
-      listOfPLayers.forEach(player => {
-        if (player.getCurrentPosition() === point) {
-          playersThere.push(player);
-        }
-      });
-      return playersThere;
     },
     returnCurrentPointHelper(point: string) {
       return point;
